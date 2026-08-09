@@ -1,26 +1,214 @@
-@import "tailwindcss";
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #14110F;
+  --paper: #F7F2E5;
+  --paper-dark: #EDE6D6;
+  --orange: #F97316;
+  --orange-deep: #E8590C;
+  --red: #B91C1C;
+  --sky: #38BDF8;
+  --muted: #4A443C;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+* { box-sizing: border-box; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--paper-dark);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--orange-deep); text-decoration: none; }
+a:hover { color: var(--ink); }
+::selection { background: var(--orange); color: var(--ink); }
+
+/* ---------- animations ---------- */
+@keyframes rasenganSpin { to { transform: rotate(360deg); } }
+@keyframes rasenganSpinRev { to { transform: rotate(-360deg); } }
+@keyframes corePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 40px 10px rgba(56,189,248,.55); }
+  50% { transform: scale(1.09); box-shadow: 0 0 70px 22px rgba(56,189,248,.75); }
+}
+@keyframes ringOut {
+  0% { transform: scale(.4); opacity: .85; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes splashOut {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.12); }
+}
+@keyframes signPop {
+  0% { opacity: 0; transform: translateY(12px) scale(.85); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes streak {
+  0% { transform: translateX(-120%); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes swirl { to { transform: rotate(360deg); } }
+@keyframes sfxJitter {
+  0%, 100% { transform: rotate(-4deg) translate(0, 0); }
+  25% { transform: rotate(-2deg) translate(1px, -1px); }
+  75% { transform: rotate(-6deg) translate(-1px, 1px); }
+}
+
+/* ---------- kage bunshin: panels pop in behind a puff of smoke ----------
+   Each panel snaps past its final size and settles back, while a cloud of
+   white puffs blooms over it and clears. Stagger comes from --d, set per
+   panel, and the smoke has to share that delay so puff and clone land
+   together. */
+@keyframes cloneIn {
+  0%   { opacity: 0; transform: scale(.5) rotate(-7deg); }
+  45%  { opacity: 1; transform: scale(1.08) rotate(2.5deg); }
+  70%  { transform: scale(.96) rotate(-1.5deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes cloneSmoke {
+  0%   { opacity: 1; transform: scale(.35); }
+  60%  { opacity: .55; }
+  100% { opacity: 0; transform: scale(1.75); }
+}
+
+/* held state while the splash is still on screen */
+.clone-wait { opacity: 0; }
+
+.clone {
+  position: relative;
+  animation: cloneIn .52s cubic-bezier(.2, 1.35, .35, 1) var(--d, 0ms) both;
+}
+.clone::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 32%, rgba(255,255,255,.97) 0 21%, transparent 23%),
+    radial-gradient(circle at 63% 16%, rgba(255,255,255,.94) 0 24%, transparent 26%),
+    radial-gradient(circle at 85% 60%, rgba(255,255,255,.94) 0 22%, transparent 24%),
+    radial-gradient(circle at 36% 80%, rgba(255,255,255,.96) 0 23%, transparent 25%),
+    radial-gradient(circle at 72% 88%, rgba(255,255,255,.92) 0 19%, transparent 21%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.9) 0 29%, transparent 31%);
+  animation: cloneSmoke .6s ease-out var(--d, 0ms) both;
+}
+
+/* ---------- scroll reveal ---------- */
+[data-reveal] {
+  opacity: 0;
+  transition: opacity .65s cubic-bezier(.2,.8,.2,1), transform .65s cubic-bezier(.2,.8,.2,1);
+  will-change: opacity, transform;
+}
+[data-reveal="up"]    { transform: translateY(40px); }
+[data-reveal="left"]  { transform: translateX(-40px); }
+[data-reveal="right"] { transform: translateX(40px); }
+[data-reveal="zoom"]  { transform: scale(.85); transition-timing-function: cubic-bezier(.2,1.2,.4,1); }
+[data-reveal="slam"]  { transform: scale(1.25); transition: opacity .5s ease-out, transform .5s cubic-bezier(.2,1.4,.4,1); }
+[data-reveal].is-in   { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1; transform: none; transition: none; }
+  .clone { animation: none; }
+  .clone::after { display: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* ---------- manga interactions ---------- */
+.manga-page {
+  border: 5px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 14px 14px 0 var(--ink);
+}
+.halftone {
+  background-color: var(--paper-dark);
+  background-image: radial-gradient(#00000018 1px, transparent 1px);
+  background-size: 5px 5px;
+}
+.btn-manga { transition: transform .12s, box-shadow .12s; }
+.btn-manga:hover { transform: translate(3px, 3px); }
+.btn-manga.shadow-ink { box-shadow: 6px 6px 0 var(--ink); }
+.btn-manga.shadow-ink:hover { box-shadow: 3px 3px 0 var(--ink); }
+.btn-manga.shadow-paper { box-shadow: 6px 6px 0 var(--paper); }
+.btn-manga.shadow-paper:hover { box-shadow: 3px 3px 0 var(--paper); }
+.btn-manga.shadow-orange { box-shadow: 6px 6px 0 var(--orange); }
+.btn-manga.shadow-orange:hover { box-shadow: 3px 3px 0 var(--orange); }
+.btn-manga.shadow-sky { box-shadow: 6px 6px 0 var(--sky); }
+.btn-manga.shadow-sky:hover { box-shadow: 3px 3px 0 var(--sky); }
+
+.card-manga {
+  box-shadow: 8px 8px 0 var(--ink);
+  transition: transform .2s, box-shadow .2s;
+}
+.card-manga:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 14px 14px 0 var(--ink);
+}
+
+.nav-link { color: var(--paper); transition: color .15s; }
+.nav-link:hover { color: var(--orange); }
+
+.footer-link { color: var(--ink); transition: color .15s; }
+.footer-link:hover { color: var(--orange-deep); }
+
+/* ---------- responsive layout ----------
+   Type and spacing scale fluidly via clamp() in the components. Anything a
+   single value can't express — collapsing a grid, restacking a flex row —
+   lives here so the media queries have somewhere to land. Base values are
+   declared in these classes rather than inline, since inline styles would
+   otherwise outrank the breakpoints. */
+
+.shell { padding: 0 clamp(12px, 3vw, 28px) clamp(12px, 3vw, 28px); }
+
+/* hero: two panels side by side, stacked once they'd get too narrow */
+.hero-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+
+.chapter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.chapter-nav { display: flex; flex-wrap: wrap; gap: 26px; }
+
+.rank-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.filter-bar { display: flex; flex-wrap: wrap; border: 3px solid var(--ink); }
+
+@media (max-width: 980px) {
+  .hero-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 700px) {
+  .chapter-bar { gap: 10px; }
+  .chapter-nav { gap: 14px; }
+  .rank-strip { gap: 12px; }
+}
+
+/* The tilt/lift hovers are meaningless on touch and only cause jitter. This
+   block sits above the 560px one deliberately: the two :hover rules have equal
+   specificity, so source order is what lets the narrow-screen shadow win on a
+   small touch device. */
+@media (hover: none) {
+  .btn-manga:hover { transform: none; }
+  .card-manga:hover { transform: none; box-shadow: 8px 8px 0 var(--ink); }
+}
+
+@media (max-width: 560px) {
+  /* thinner frames and shorter drop shadows so the panels don't eat the screen */
+  .manga-page { border-width: 4px; box-shadow: 8px 8px 0 var(--ink); }
+  .card-manga { box-shadow: 6px 6px 0 var(--ink); }
+  .card-manga:hover { transform: none; box-shadow: 6px 6px 0 var(--ink); }
+  .filter-bar { width: 100%; }
+  .filter-bar > button { flex: 1 1 auto; }
 }
