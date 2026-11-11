@@ -121,10 +121,13 @@ button { font-family: inherit; }
   align-items: start;
 }
 .skill-detail { position: sticky; top: 104px; }
+/* Tool details inside the tapped group card: small screens only. */
+.skill-inline { display: none; }
 @media (max-width: 900px) {
   .skills-layout { grid-template-columns: minmax(0, 1fr); }
-  .skill-detail { position: static; }
-  .bubble-tail { display: none; }
+  /* Stacked, the side bubble would sit below every group, out of sight. */
+  .skill-detail { display: none; }
+  .skill-inline { display: block; }
 }
 
 .timeline { position: relative; max-width: 860px; padding-left: 64px; }

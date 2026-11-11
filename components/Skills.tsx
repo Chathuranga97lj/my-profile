@@ -10,11 +10,15 @@ import { BODY, DISPLAY_FONT, INK, MUTED, PAPER, PROJECTS, SKILL_GROUPS, SPOT, TE
  * Tool chips grouped by how often they're used. Hovering, focusing or tapping
  * a chip fills the speech bubble with a plain-language explanation and the
  * projects that used it; those jump down to the project card.
+ *
+ * The bubble sits in a sticky side column on wide screens. Once the layout
+ * stacks (≤900px) that column would land below every group, out of sight, so
+ * it is hidden and the same details open inside the tapped group's card
+ * instead (`.skill-inline`). Both are always rendered; CSS picks one.
  */
 export default function Skills({ onJump }: { onJump: (projectId: string) => void }) {
   const [tool, setTool] = useState<string | null>(null);
   const group = tool ? SKILL_GROUPS.find((g) => g.tools.includes(tool)) : undefined;
-  const usedIn = tool ? PROJECTS.filter((p) => p.tech.includes(tool)) : [];
 
   return (
     <section id="skills" aria-labelledby="skills-title" className="halftone" style={sectionStyle(YELLOW)}>
@@ -78,6 +82,24 @@ export default function Skills({ onJump }: { onJump: (projectId: string) => void
                       );
                     })}
                   </ul>
+
+                  {/* Small screens: the details open right under the chips that were tapped. */}
+                  {tool && group === g && (
+                    <div
+                      className="skill-inline"
+                      aria-live="polite"
+                      style={{
+                        marginTop: 20,
+                        padding: '20px 20px 22px',
+                        background: PAPER,
+                        border: `3px solid ${INK}`,
+                        borderRadius: 24,
+                        boxShadow: `5px 5px 0 ${SPOT}`,
+                      }}
+                    >
+                      <ToolDetail key={tool} tool={tool} onJump={onJump} compact />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -98,62 +120,10 @@ export default function Skills({ onJump }: { onJump: (projectId: string) => void
             >
               <TailLeft top={46} />
               {tool ? (
-                <div key={tool} className="bubble-in">
+                <>
                   <p style={{ color: SPOT, fontSize: 15, fontWeight: 900 }}>{group?.title}</p>
-                  <h3
-                    style={{
-                      marginTop: 6,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 14,
-                      color: INK,
-                      fontFamily: DISPLAY_FONT,
-                      fontWeight: 400,
-                      fontSize: 'clamp(30px, 3.4vw, 40px)',
-                      lineHeight: 1.1,
-                    }}
-                  >
-                    <ToolLogo name={tool} size={36} />
-                    <span>{tool}</span>
-                  </h3>
-                  <p style={{ marginTop: 12, color: TEXT, fontSize: 18, lineHeight: 1.55 }}>{TOOL_INFO[tool]}</p>
-                  <p style={{ marginTop: 22, color: MUTED, fontSize: 14, fontWeight: 700 }}>Used in</p>
-                  {usedIn.length > 0 ? (
-                    <ul style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                      {usedIn.map((p) => (
-                        <li key={p.id}>
-                          <button
-                            type="button"
-                            className="btn jump"
-                            onClick={() => onJump(p.id)}
-                            style={
-                              {
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                padding: '9px 14px',
-                                background: YELLOW,
-                                color: INK,
-                                border: `3px solid ${INK}`,
-                                boxShadow: `3px 3px 0 ${INK}`,
-                                '--hover-shadow': `5px 5px 0 ${INK}`,
-                                fontWeight: 900,
-                                fontSize: 15,
-                                lineHeight: 1.2,
-                                cursor: 'pointer',
-                              } as CSSProperties
-                            }
-                          >
-                            <span>{p.name}</span>
-                            <ArrowDown />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p style={{ marginTop: 8, color: BODY, fontSize: 16 }}>Not linked to a specific project on this page.</p>
-                  )}
-                </div>
+                  <ToolDetail key={tool} tool={tool} onJump={onJump} />
+                </>
               ) : (
                 <div>
                   <p style={{ color: INK, fontFamily: DISPLAY_FONT, fontSize: 28, lineHeight: 1.15 }}>Pick a tool</p>
@@ -167,5 +137,72 @@ export default function Skills({ onJump }: { onJump: (projectId: string) => void
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * What a tool does and which projects used it. `compact` is the version that
+ * opens inside a group card on small screens, so its heading drops a level.
+ */
+function ToolDetail({ tool, onJump, compact = false }: { tool: string; onJump: (projectId: string) => void; compact?: boolean }) {
+  const usedIn = PROJECTS.filter((p) => p.tech.includes(tool));
+  const Heading = compact ? 'h4' : 'h3';
+
+  return (
+    <div className="bubble-in">
+      <Heading
+        style={{
+          marginTop: compact ? 0 : 6,
+          display: 'flex',
+          alignItems: 'center',
+          gap: compact ? 10 : 14,
+          color: INK,
+          fontFamily: DISPLAY_FONT,
+          fontWeight: 400,
+          fontSize: compact ? 26 : 'clamp(30px, 3.4vw, 40px)',
+          lineHeight: 1.1,
+        }}
+      >
+        <ToolLogo name={tool} size={compact ? 26 : 36} />
+        <span>{tool}</span>
+      </Heading>
+      <p style={{ marginTop: compact ? 10 : 12, color: TEXT, fontSize: compact ? 17 : 18, lineHeight: 1.55 }}>{TOOL_INFO[tool]}</p>
+      <p style={{ marginTop: compact ? 18 : 22, color: MUTED, fontSize: 14, fontWeight: 700 }}>Used in</p>
+      {usedIn.length > 0 ? (
+        <ul style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          {usedIn.map((p) => (
+            <li key={p.id}>
+              <button
+                type="button"
+                className="btn jump"
+                onClick={() => onJump(p.id)}
+                style={
+                  {
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '9px 14px',
+                    background: YELLOW,
+                    color: INK,
+                    border: `3px solid ${INK}`,
+                    boxShadow: `3px 3px 0 ${INK}`,
+                    '--hover-shadow': `5px 5px 0 ${INK}`,
+                    fontWeight: 900,
+                    fontSize: 15,
+                    lineHeight: 1.2,
+                    cursor: 'pointer',
+                  } as CSSProperties
+                }
+              >
+                <span>{p.name}</span>
+                <ArrowDown />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p style={{ marginTop: 8, color: BODY, fontSize: 16 }}>Not linked to a specific project on this page.</p>
+      )}
+    </div>
   );
 }
