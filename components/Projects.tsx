@@ -3,7 +3,7 @@
 import type { CSSProperties } from 'react';
 import { ArrowUpRight } from '@/components/icons';
 import { FilterButtons, SectionHeading, extLinkStyle, sectionStyle } from '@/components/ui';
-import { BODY, DISPLAY_FONT, INK, MUTED, PAPER, PROJECT_FILTERS, PROJECTS, SPOT, type ProjectFilter } from '@/lib/data';
+import { BODY, DISPLAY_FONT, INK, MUTED, PAPER, PROJECT_FILTERS, PROJECTS, SPOT, YELLOW, type ProjectFilter } from '@/lib/data';
 
 /**
  * Project cards with a screentone cover. The filter lives in the page so the
@@ -90,6 +90,21 @@ export default function Projects({ filter, onFilter }: { filter: ProjectFilter; 
                       {p.type}
                     </span>
                     <span style={{ color: MUTED, fontSize: 14, fontWeight: 700 }}>{p.years}</span>
+                    {p.badge && (
+                      <span
+                        style={{
+                          padding: '3px 10px',
+                          background: YELLOW,
+                          color: INK,
+                          border: `2px solid ${INK}`,
+                          borderRadius: 999,
+                          fontSize: 13,
+                          fontWeight: 900,
+                        }}
+                      >
+                        {p.badge}
+                      </span>
+                    )}
                   </div>
                   <h3 style={{ marginTop: 12, color: INK, fontFamily: DISPLAY_FONT, fontWeight: 400, fontSize: 26, lineHeight: 1.15 }}>
                     {p.name}
@@ -118,7 +133,7 @@ export default function Projects({ filter, onFilter }: { filter: ProjectFilter; 
                     <div style={{ paddingTop: 16, borderTop: `3px solid ${INK}` }}>
                       {p.link ? (
                         <a href={p.link} target="_blank" rel="noopener noreferrer" className="ext" style={extLinkStyle}>
-                          <span>Visit {p.domain}</span>
+                          <span>{p.linkLabel ?? `Visit ${p.domain}`}</span>
                           <ArrowUpRight />
                           <span className="sr-only">(opens in a new tab)</span>
                         </a>

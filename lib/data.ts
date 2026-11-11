@@ -73,15 +73,24 @@ export const TOOL_INFO: Record<string, string> = {
   'REST APIs': 'A common way for apps and servers to talk to each other over the web.',
   Git: 'Keeps a history of every code change, so teams can work together safely.',
   Linux: "The operating system most of the internet's servers run on.",
+  React: 'A popular way to build the screens people click and type into on a website.',
+  NestJS: 'A Node.js framework for building well-organised servers and APIs.',
+  PostgreSQL: 'A powerful database that can enforce its own rules, so records stay correct.',
+  Supabase: 'A ready-made back end: sign-in, a database and file storage in one place.',
+  Docker: 'Packs an app with everything it needs, so it runs the same on any server.',
 };
 
 export type SkillGroup = { title: string; note: string; tools: string[] };
 
 export const SKILL_GROUPS: SkillGroup[] = [
   { title: 'Every day', note: 'What I use most at work', tools: ['Next.js', 'Angular', 'Node.js', 'Express.js', 'TypeScript', 'JavaScript'] },
-  { title: 'Also built with', note: "More tools I've worked with", tools: ['Laravel', 'Python'] },
+  { title: 'Also built with', note: "More tools I've worked with", tools: ['React', 'NestJS', 'Laravel', 'Python'] },
   { title: 'Learning now', note: "What I'm getting better at", tools: ['Go', 'Flutter'] },
-  { title: 'Data and tools', note: 'What keeps everything running', tools: ['MySQL', 'MongoDB', 'REST APIs', 'Git', 'Linux'] },
+  {
+    title: 'Data and tools',
+    note: 'What keeps everything running',
+    tools: ['MySQL', 'PostgreSQL', 'MongoDB', 'Supabase', 'REST APIs', 'Docker', 'Git', 'Linux'],
+  },
 ];
 
 /** Manga screentones for the project covers. 12px tiles, so the hover drift loops cleanly. */
@@ -89,6 +98,9 @@ const TONE_DOTS = 'radial-gradient(circle, rgba(0,0,0,0.5) 1.7px, transparent 2.
 const TONE_LINES =
   'linear-gradient(45deg, rgba(0,0,0,0.42) 0 12.5%, transparent 12.5% 50%, rgba(0,0,0,0.42) 50% 62.5%, transparent 62.5% 100%)';
 const TONE_HATCH = `${TONE_LINES}, linear-gradient(-45deg, rgba(0,0,0,0.3) 0 12.5%, transparent 12.5% 50%, rgba(0,0,0,0.3) 50% 62.5%, transparent 62.5% 100%)`;
+const TONE_GRID =
+  'linear-gradient(rgba(0,0,0,0.32) 1.5px, transparent 1.5px), linear-gradient(90deg, rgba(0,0,0,0.32) 1.5px, transparent 1.5px)';
+const TONE_BIG_DOTS = 'radial-gradient(circle, rgba(0,0,0,0.55) 2.6px, transparent 3px)';
 
 export type ProjectKind = 'web' | 'mobile';
 export type ProjectFilter = 'all' | ProjectKind;
@@ -104,6 +116,10 @@ export type Project = {
   /** Empty when there is no public link; the card then points to the contact section. */
   link: string;
   domain: string;
+  /** Link text; defaults to "Visit <domain>". */
+  linkLabel?: string;
+  /** Optional extra pill next to the year, e.g. "Open source". */
+  badge?: string;
   coverBg: string;
   tone: string;
 };
@@ -123,6 +139,21 @@ export const PROJECTS: Project[] = [
     tone: TONE_DOTS,
   },
   {
+    id: 'pothgula',
+    name: 'Pothgula',
+    kind: 'web',
+    type: 'Web app',
+    years: '2026 – now',
+    badge: 'Open source',
+    desc: 'A free, open-source library system for community and temple libraries with several branches. It handles lending, memberships, books moving between branches and reports, in English and Sinhala.',
+    tech: ['React', 'NestJS', 'Node.js', 'TypeScript', 'PostgreSQL', 'Docker'],
+    link: 'https://github.com/Chathuranga97lj/pothgula',
+    domain: 'github.com',
+    linkLabel: 'See the code on GitHub',
+    coverBg: BLUE,
+    tone: TONE_GRID,
+  },
+  {
     id: 'top-tutors',
     name: 'TopTutors Global',
     kind: 'web',
@@ -134,6 +165,20 @@ export const PROJECTS: Project[] = [
     domain: 'toptutorsglobal.com',
     coverBg: YELLOW,
     tone: TONE_LINES,
+  },
+  {
+    id: 'motor-stock',
+    name: 'Motor Stock',
+    kind: 'mobile',
+    type: 'Mobile app',
+    years: '2026',
+    desc: 'A mobile app that runs a motorbike parts shop across two branches: parts and stock with photos, bills to print or share, money still owed, and deliveries from suppliers.',
+    tech: ['Flutter', 'Dart', 'Supabase', 'PostgreSQL'],
+    link: 'https://github.com/Chathuranga97lj/motor-stock',
+    domain: 'github.com',
+    linkLabel: 'See the code on GitHub',
+    coverBg: PAPER,
+    tone: TONE_BIG_DOTS,
   },
   {
     id: 'kiriguru',
