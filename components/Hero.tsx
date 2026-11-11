@@ -1,364 +1,376 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
-import {
-  INK,
-  INK_45,
-  INK_70,
-  ON_INK,
-  ORANGE,
-  ORANGE_INK,
-  PAPER,
-  RED,
-  TERM,
-  RANKS,
-  LINKS,
-} from '@/lib/data';
+import { useRef, useState, type CSSProperties, type MouseEvent } from 'react';
+import { TailDown } from '@/components/ui';
+import { BODY, CJ_LETTERS, DISPLAY_FONT, FACTS, INK, MUTED, NAME_LINES, PAPER, SPOT } from '@/lib/data';
 
-/**
- * The hero is ONE panel.
- *
- * The old build made every block its own bordered, drop-shadowed box — seven
- * of them, all the same weight, so the eye had nowhere to land. Here the outer
- * frame carries the whole shadow and the cells are separated by 3px ink
- * gutters: the grid's background shows through its own gaps. That is how a
- * manga page is actually ruled, and it costs one border instead of seven.
- */
-export default function Hero({ ready }: { ready: boolean }) {
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [hover, setHover] = useState(false);
-  const fluid = useRef(true);
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-  // A pointer tilt is meaningless on touch and unwelcome under reduced motion.
-  useEffect(() => {
-    fluid.current =
-      window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
-      !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }, []);
+const SPEED_LINES =
+  'radial-gradient(circle, transparent 29%, #000000 38%, #000000 55%, transparent 70%)';
+
+export default function Hero() {
+  const portrait = useRef<HTMLDivElement>(null);
+  const [photo, setPhoto] = useState(false);
+  const [hintSeen, setHintSeen] = useState(false);
 
   /**
-   * Panels poof in one after another once the splash clears — and must be held
-   * invisible until then. `<main>` renders under the splash from first paint,
-   * so a panel that animated on mount would be seen through the splash's fade
-   * and then pop a second time, which reads as a double reveal.
+   * The lens is three CSS variables on the portrait: --lens-x / --lens-y follow
+   * the cursor instantly, --lens-r animates (it is a registered @property).
+   * They are written straight to the element so the cursor never re-renders.
    */
-  const clone = (order: number, style: React.CSSProperties) => ({
-    className: ready ? 'clone' : 'clone-wait',
-    style: (ready ? { ...style, '--d': `${order * 55}ms` } : style) as React.CSSProperties,
-  });
-
-  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!fluid.current) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    setTilt({
-      x: ((e.clientX - r.left) / r.width - 0.5) * 10,
-      y: ((e.clientY - r.top) / r.height - 0.5) * 8,
-    });
+  const aim = (el: HTMLDivElement, e: MouseEvent) => {
+    const r = el.getBoundingClientRect();
+    el.style.setProperty('--lens-x', `${(e.clientX - r.left - el.clientLeft).toFixed(1)}px`);
+    el.style.setProperty('--lens-y', `${(e.clientY - r.top - el.clientTop).toFixed(1)}px`);
   };
 
-  const cell: React.CSSProperties = { background: PAPER };
+  const onEnter = (e: MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    aim(el, e);
+    if (!photo) {
+      el.style.setProperty('--lens-r', `${Math.round(clamp(el.clientWidth * 0.21, 56, 104))}px`);
+      el.classList.add('is-lens');
+    }
+    setHintSeen(true);
+  };
+
+  const onMove = (e: MouseEvent<HTMLDivElement>) => aim(e.currentTarget, e);
+
+  const onLeave = (e: MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    el.classList.remove('is-lens');
+    if (!photo) el.style.setProperty('--lens-r', '0px');
+  };
+
+  // "Show my photo" grows the lens until it covers the whole panel.
+  const togglePhoto = () => {
+    const el = portrait.current;
+    const next = !photo;
+    if (el) {
+      el.classList.remove('is-lens');
+      if (next) {
+        el.style.setProperty('--lens-x', `${(el.clientWidth / 2).toFixed(1)}px`);
+        el.style.setProperty('--lens-y', `${(el.clientHeight * 0.32).toFixed(1)}px`);
+        el.style.setProperty('--lens-r', `${Math.ceil(Math.hypot(el.clientWidth, el.clientHeight))}px`);
+      } else {
+        el.style.setProperty('--lens-r', '0px');
+      }
+    }
+    setPhoto(next);
+    setHintSeen(true);
+  };
 
   return (
     <section
       id="top"
-      style={{ padding: 'clamp(14px, 3vw, 28px)', display: 'flex', justifyContent: 'center' }}
+      aria-label="Introduction"
+      style={{ position: 'relative', isolation: 'isolate', overflow: 'hidden', background: PAPER }}
     >
-      <div
-        className="panel-hero hero-grid"
-        style={{
-          width: '100%',
-          maxWidth: 1240,
-          // the grid's own background is what shows through the gaps, so the
-          // gutters between cells are real ink lines rather than seven borders
-          background: INK,
-          gap: 3,
-        }}
-      >
-        {/* ---- portrait ---- */}
-        <div
-          onMouseMove={onMove}
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={() => {
-            setHover(false);
-            setTilt({ x: 0, y: 0 });
-          }}
-          {...clone(0, {
-            ...cell,
-            position: 'relative',
-            overflow: 'hidden',
-            minHeight: 'clamp(320px, 56vw, 500px)',
-          })}
-        >
-          {/* speed lines, kept faint — they are texture, not a subject */}
-          <div
-            aria-hidden
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background:
-                'repeating-conic-gradient(from 0deg at 50% 45%, var(--ink) 0deg 1.2deg, transparent 1.2deg 5deg)',
-              opacity: 0.1,
-            }}
-          />
-          <Image
-            src="/hero-manga.png"
-            alt="Chathuranga L Jayawardhana, drawn manga style"
-            fill
-            priority
-            sizes="(max-width: 900px) 100vw, 640px"
-            style={{
-              objectFit: 'cover',
-              objectPosition: '50% 30%',
-              transform: `scale(${hover ? 1.04 : 1.01}) translate(${-tilt.x}px, ${-tilt.y}px)`,
-              transition: 'transform 220ms var(--ease-out)',
-            }}
-          />
-
-          <div
-            style={{
-              position: 'absolute',
-              left: 16,
-              bottom: 18,
-              background: ORANGE,
-              border: `3px solid ${INK}`,
-              padding: '5px 16px 7px',
-              transform: 'rotate(-2.5deg)',
-              boxShadow: `4px 4px 0 ${INK}`,
-            }}
-          >
-            <span
-              className="t-sfx"
-              style={{ fontSize: 'clamp(20px, 5vw, 27px)', color: 'var(--fixed-ink)' }}
-            >
-              ドン！ ENTER
-            </span>
-          </div>
-
-          <div
-            style={{
-              position: 'absolute',
-              right: 14,
-              top: 14,
-              background: INK,
-              color: ON_INK,
-              padding: '5px 11px',
-              fontWeight: 800,
-              fontSize: 11.5,
-              letterSpacing: '0.13em',
-              textTransform: 'uppercase',
-            }}
-          >
-            Hidden Leaf · Colombo
-          </div>
-        </div>
-
-        {/* ---- right column: its own grid, so the gutters continue ---- */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateRows: 'auto auto auto 1fr',
-            background: INK,
-            gap: 3,
-          }}
-        >
-          {/* name — the loudest type on the page, and the only thing at this size */}
-          <div
-            {...clone(1, {
-              ...cell,
-              padding: 'clamp(20px, 3.6vw, 30px) clamp(18px, 3.2vw, 26px)',
-              position: 'relative',
-              overflow: 'hidden',
-            })}
-          >
+      <div className="wrap" style={{ paddingBlock: 'clamp(40px, 6vw, 84px) clamp(56px, 7vw, 96px)' }}>
+        <div className="hero-grid">
+          <div className="hero-copy">
             <div
-              className="t-sfx"
-              style={{
-                fontSize: 'clamp(15px, 3.4vw, 18px)',
-                color: RED,
-                transform: 'rotate(-1.5deg)',
-                display: 'inline-block',
-              }}
+              className="pop"
+              style={
+                {
+                  '--d': '150ms',
+                  position: 'relative',
+                  display: 'inline-block',
+                  padding: '9px 22px 11px',
+                  background: PAPER,
+                  border: `3px solid ${INK}`,
+                  borderRadius: 999,
+                  color: INK,
+                  fontWeight: 900,
+                  fontSize: 19,
+                  lineHeight: 1.2,
+                  transformOrigin: '20% 100%',
+                } as CSSProperties
+              }
             >
-              ズン！ NAME REVEAL
+              Hi, I’m
+              <TailDown left={28} tipX={4} />
             </div>
+
+            {/* Font size comes from .hero-name (sized to the column) — keep it out of the inline style */}
             <h1
-              className="t-display"
+              className="hero-name"
               style={{
-                fontSize: 'clamp(33px, 7.4vw, 58px)',
-                margin: '8px 0 0',
+                marginTop: 28,
                 color: INK,
-                textShadow: `3px 3px 0 ${ORANGE}`,
+                fontFamily: DISPLAY_FONT,
+                fontWeight: 400,
+                lineHeight: 1.06,
+                letterSpacing: '-0.005em',
               }}
             >
-              Chathuranga L
-              <br />
-              Jayawardhana
+              <span className="sr-only">Chathuranga L Jayawardhana</span>
+              {NAME_LINES.map((line, li) => (
+                <span key={line} aria-hidden="true" style={{ display: 'block', whiteSpace: 'nowrap' }}>
+                  {Array.from(line).map((ch, i) => (
+                    <span
+                      key={i}
+                      className="letter"
+                      style={{ animationDelay: `${240 + (li * NAME_LINES[0].length + i) * 26}ms` }}
+                    >
+                      <span className={CJ_LETTERS[li] === i ? 'letter-inner cj' : 'letter-inner'}>
+                        {ch === ' ' ? ' ' : ch}
+                      </span>
+                    </span>
+                  ))}
+                </span>
+              ))}
             </h1>
-            <div
-              style={{
-                marginTop: 14,
-                display: 'inline-block',
-                background: INK,
-                color: ON_INK,
-                fontWeight: 800,
-                fontSize: 12.5,
-                letterSpacing: '0.18em',
-                padding: '6px 13px',
-                textTransform: 'uppercase',
-              }}
+
+            <p
+              className="rise"
+              style={
+                {
+                  '--d': '620ms',
+                  marginTop: 22,
+                  color: INK,
+                  fontSize: 'clamp(19px, 2.1vw, 23px)',
+                  fontWeight: 900,
+                  lineHeight: 1.35,
+                } as CSSProperties
+              }
             >
-              Software Engineer
+              Software engineer based in Colombo, Sri Lanka
+            </p>
+            <p
+              className="rise"
+              style={{ '--d': '720ms', marginTop: 14, maxWidth: '34em', color: BODY, fontSize: 18, lineHeight: 1.65 } as CSSProperties}
+            >
+              I build websites and web apps that grow with their users — from the pages people see to the servers
+              behind them. Day to day, I work with Next.js, Angular and Node.js, and I’ve also built with Laravel and
+              Flutter.
+            </p>
+            <div className="rise" style={{ '--d': '820ms', marginTop: 30, display: 'flex', flexWrap: 'wrap', gap: 16 } as CSSProperties}>
+              <a
+                href="#projects"
+                className="btn"
+                style={
+                  {
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '15px 24px',
+                    background: SPOT,
+                    color: PAPER,
+                    border: `3px solid ${INK}`,
+                    boxShadow: `6px 6px 0 ${INK}`,
+                    '--hover-shadow': `9px 9px 0 ${INK}`,
+                    fontWeight: 900,
+                    fontSize: 17,
+                    lineHeight: 1.2,
+                    textDecoration: 'none',
+                  } as CSSProperties
+                }
+              >
+                See my projects
+              </a>
+              <a
+                href="#contact"
+                className="btn"
+                style={
+                  {
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '15px 24px',
+                    background: PAPER,
+                    color: INK,
+                    border: `3px solid ${INK}`,
+                    boxShadow: `6px 6px 0 ${SPOT}`,
+                    '--hover-shadow': `9px 9px 0 ${SPOT}`,
+                    fontWeight: 900,
+                    fontSize: 17,
+                    lineHeight: 1.2,
+                    textDecoration: 'none',
+                  } as CSSProperties
+                }
+              >
+                Get in touch
+              </a>
             </div>
           </div>
 
-          {/* quote — a speech tail pins it to the panel above */}
-          <div
-            {...clone(2, {
-              ...cell,
-              padding: 'clamp(16px, 3vw, 22px) clamp(18px, 3.2vw, 26px)',
-              position: 'relative',
-            })}
-          >
+          <div style={{ position: 'relative', width: '100%', maxWidth: 500, justifySelf: 'center' }}>
+            {/* Speed-line burst behind the panel; useScrollEffects turns it as you scroll */}
             <div
-              aria-hidden
+              aria-hidden="true"
+              data-burst
               style={{
                 position: 'absolute',
-                left: 32,
-                top: -14,
-                width: 0,
-                height: 0,
-                borderLeft: '12px solid transparent',
-                borderRight: '12px solid transparent',
-                borderBottom: `14px solid ${PAPER}`,
-              }}
-            />
-            <p
-              style={{
-                margin: 0,
-                fontSize: 'clamp(15px, 3.4vw, 17.5px)',
-                fontWeight: 600,
-                lineHeight: 1.55,
-                color: INK,
+                left: '50%',
+                top: '50%',
+                zIndex: -1,
+                width: '178%',
+                aspectRatio: '1 / 1',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
               }}
             >
-              “Crafting scalable web platforms with{' '}
-              <span style={{ color: ORANGE_INK }}>Next.js</span>,{' '}
-              <span style={{ color: ORANGE_INK }}>Angular</span> &amp;{' '}
-              <span style={{ color: ORANGE_INK }}>Node.js</span>.”
-            </p>
-          </div>
-
-          {/* mission scroll — the one inverted cell, so it reads as a terminal */}
-          <div {...clone(3, { background: INK, padding: '15px clamp(18px, 3.2vw, 24px)' })}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
-              <span aria-hidden style={{ width: 8, height: 8, background: ORANGE }} />
-              <span
-                className="t-label"
-                style={{ color: ON_INK, fontSize: 10.5 }}
-              >
-                Mission Scroll · 巻物
-              </span>
+              <div
+                className="burst"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '50%',
+                  background: 'repeating-conic-gradient(from 0deg, rgba(0,0,0,0.12) 0deg 1.1deg, transparent 1.1deg 4.5deg)',
+                  WebkitMaskImage: SPEED_LINES,
+                  maskImage: SPEED_LINES,
+                }}
+              />
             </div>
-            <div className="t-mono" style={{ color: TERM }}>
-              $ ninja --status
-            </div>
-            <div className="t-mono" style={{ color: ON_INK, marginTop: 4 }}>
-              Exploring Go 🐹 · Experimenting with Flutter 📱
-              <span aria-hidden style={{ color: ORANGE, animation: 'blink 1s step-end infinite' }}>
-                ▌
-              </span>
-            </div>
-          </div>
 
-          {/* actions */}
-          <div
-            {...clone(4, {
-              ...cell,
-              display: 'flex',
-              gap: 12,
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              padding: 'clamp(16px, 3vw, 20px) clamp(18px, 3.2vw, 26px)',
-            })}
-          >
-            <a className="btn btn-primary pressable" href="#projects" style={{ flex: '1 1 160px' }}>
-              View Missions →
-            </a>
-            <a
-              className="btn btn-secondary pressable"
-              href={`mailto:${LINKS.email}`}
-              style={{ flex: '1 1 160px' }}
-            >
-              Summon Me
-            </a>
-          </div>
-        </div>
-
-        {/* ---- rank strip ---- */}
-        <div
-          {...clone(5, {
-            ...cell,
-            gridColumn: '1 / -1',
-            padding: '13px clamp(16px, 3vw, 24px)',
-          })}
-        >
-          <div className="rank-strip">
-            <ul
-              style={{
-                display: 'flex',
-                gap: 8,
-                flexWrap: 'wrap',
-                listStyle: 'none',
-                margin: 0,
-                padding: 0,
-              }}
-            >
-              {RANKS.map((r) => (
-                <li
-                  key={r.label}
-                  className="t-label"
+            <div data-float style={{ position: 'relative' }}>
+              {!hintSeen && (
+                <div
+                  className="hint"
+                  aria-hidden="true"
                   style={{
-                    border: `2px solid ${INK}`,
-                    background: r.bg,
-                    color: r.fg,
-                    padding: '5px 11px',
+                    position: 'absolute',
+                    left: -8,
+                    top: -30,
+                    zIndex: 3,
+                    maxWidth: 250,
+                    padding: '9px 16px 10px',
+                    background: PAPER,
+                    border: `3px solid ${INK}`,
+                    borderRadius: 22,
+                    color: INK,
+                    fontWeight: 900,
+                    fontSize: 15,
+                    lineHeight: 1.3,
+                    transformOrigin: '20% 100%',
                   }}
                 >
-                  {r.label}
-                </li>
-              ))}
-            </ul>
-            <div
-              style={{
-                display: 'flex',
-                gap: 'clamp(14px, 3vw, 22px)',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-              }}
-            >
-              <span className="t-kanji" style={{ fontSize: 13, color: INK_45 }}>
-                連絡
-              </span>
-              {[
-                { href: LINKS.github, label: 'GitHub' },
-                { href: LINKS.linkedin, label: 'LinkedIn' },
-                { href: `mailto:${LINKS.email}`, label: 'Email' },
-              ].map((l) => (
-                <a
-                  key={l.label}
-                  className="link t-label"
-                  href={l.href}
-                  target={l.href.startsWith('mailto') ? undefined : '_blank'}
-                  rel="noopener noreferrer"
-                  style={{ color: INK_70 }}
+                  <span className="only-hover">Hover over the drawing to see the real me</span>
+                  <span className="only-touch">Tap the drawing to see the real me</span>
+                  <TailDown left={34} tipX={20} />
+                </div>
+              )}
+
+              <div
+                ref={portrait}
+                className="portrait"
+                onMouseEnter={onEnter}
+                onMouseMove={onMove}
+                onMouseLeave={onLeave}
+                style={
+                  {
+                    '--lens-x': '50%',
+                    '--lens-y': '32%',
+                    '--lens-r': '0px',
+                    position: 'relative',
+                    aspectRatio: '1 / 1',
+                    background: PAPER,
+                    border: `5px solid ${INK}`,
+                    boxShadow: `14px 14px 0 ${SPOT}`,
+                    overflow: 'hidden',
+                    cursor: 'crosshair',
+                  } as CSSProperties
+                }
+              >
+                <Image
+                  src="/hero-manga.png"
+                  alt="Comic-style drawing of Chathuranga in sunglasses and a blazer"
+                  fill
+                  sizes="(max-width: 920px) 92vw, 500px"
+                  loading="eager"
+                  fetchPriority="high"
+                  style={{ objectFit: 'cover' }}
+                />
+                {/* The real photo, shown only inside the lens circle */}
+                <div
+                  aria-hidden="true"
+                  style={{ position: 'absolute', inset: 0, clipPath: 'circle(var(--lens-r) at var(--lens-x) var(--lens-y))' }}
                 >
-                  {l.label} ↗
-                </a>
-              ))}
+                  <Image src="/chathuranga-photo.jpg" alt="" fill sizes="(max-width: 920px) 92vw, 500px" style={{ objectFit: 'cover' }} />
+                </div>
+                <div
+                  className="lens-ring"
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    left: 'var(--lens-x)',
+                    top: 'var(--lens-y)',
+                    width: 'calc(var(--lens-r) * 2)',
+                    height: 'calc(var(--lens-r) * 2)',
+                    transform: 'translate(-50%, -50%)',
+                    border: `4px solid ${INK}`,
+                    borderRadius: '50%',
+                    boxShadow: `0 0 0 3px ${PAPER}, inset 0 0 0 3px ${PAPER}`,
+                    pointerEvents: 'none',
+                  }}
+                />
+              </div>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={togglePhoto}
+                aria-pressed={photo}
+                style={
+                  {
+                    position: 'absolute',
+                    right: -10,
+                    bottom: 24,
+                    zIndex: 2,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '10px 16px',
+                    background: INK,
+                    color: PAPER,
+                    border: `3px solid ${PAPER}`,
+                    boxShadow: `4px 4px 0 ${INK}`,
+                    '--hover-shadow': `7px 7px 0 ${INK}`,
+                    fontWeight: 900,
+                    fontSize: 15,
+                    lineHeight: 1.2,
+                    cursor: 'pointer',
+                  } as CSSProperties
+                }
+              >
+                {photo ? 'Show the drawing' : 'Show my photo'}
+              </button>
             </div>
           </div>
         </div>
+
+        <ul
+          aria-label="Quick facts"
+          style={{
+            listStyle: 'none',
+            margin: 'clamp(56px, 7vw, 84px) 0 0',
+            padding: 0,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
+            gap: 18,
+          }}
+        >
+          {FACTS.map((f, i) => (
+            <li
+              key={f.label}
+              className="rise"
+              style={
+                {
+                  '--d': `${950 + i * 80}ms`,
+                  padding: '16px 18px 18px',
+                  background: PAPER,
+                  border: `3px solid ${INK}`,
+                  boxShadow: `5px 5px 0 ${INK}`,
+                } as CSSProperties
+              }
+            >
+              <span style={{ display: 'block', color: MUTED, fontSize: 14, fontWeight: 500 }}>{f.label}</span>
+              <span style={{ display: 'block', marginTop: 4, color: INK, fontSize: 19, fontWeight: 900, lineHeight: 1.3 }}>
+                {f.value}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

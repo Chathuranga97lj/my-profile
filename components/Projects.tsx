@@ -1,184 +1,141 @@
 'use client';
 
-import { useState } from 'react';
-import { FILTERS, INK, INK_45, INK_70, ORANGE_INK, PAPER, PROJECTS, SKY, type FilterKey } from '@/lib/data';
+import type { CSSProperties } from 'react';
+import { ArrowUpRight } from '@/components/icons';
+import { FilterButtons, SectionHeading, extLinkStyle, sectionStyle } from '@/components/ui';
+import { BODY, DISPLAY_FONT, INK, MUTED, PAPER, PROJECT_FILTERS, PROJECTS, SPOT, type ProjectFilter } from '@/lib/data';
 
-export default function Projects() {
-  const [filter, setFilter] = useState<FilterKey>('all');
-
-  const visible = filter === 'all' ? PROJECTS : PROJECTS.filter((p) => p.filterKey === filter);
+/**
+ * Project cards with a screentone cover. The filter lives in the page so the
+ * skills panel can reset it before jumping to a card. Cards are keyed by the
+ * filter, so changing it remounts them and they ink in again.
+ */
+export default function Projects({ filter, onFilter }: { filter: ProjectFilter; onFilter: (filter: ProjectFilter) => void }) {
+  const count = (key: ProjectFilter) => (key === 'all' ? PROJECTS.length : PROJECTS.filter((p) => p.kind === key).length);
+  const visible = filter === 'all' ? PROJECTS : PROJECTS.filter((p) => p.kind === filter);
 
   return (
-    <section id="projects" className="panel" style={{ padding: 'clamp(18px, 3.4vw, 30px)' }}>
-      <div className="section-head">
-        <div
-          data-reveal="pop"
-          style={{ display: 'flex', alignItems: 'baseline', gap: 'clamp(10px, 2vw, 14px)', flexWrap: 'wrap' }}
-        >
-          <h2 className="t-section" style={{ color: INK, textShadow: `3px 3px 0 ${SKY}` }}>
-            Mission Log
-          </h2>
-          <span className="t-kanji" style={{ fontSize: 'clamp(15px, 3.2vw, 19px)', color: INK_45 }}>
-            任務記録
-          </span>
+    <section id="projects" aria-labelledby="projects-title" style={sectionStyle(PAPER)}>
+      <div className="wrap">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: '24px 32px' }}>
+          <SectionHeading id="projects-title" title="Things I’ve built" lead="A few of the projects I’ve worked on." maxWidth={640} />
+          <div className="reveal" style={{ '--d': '120ms' } as CSSProperties}>
+            <FilterButtons
+              label="Filter projects"
+              options={PROJECT_FILTERS.map((f) => ({ key: f.key, label: f.label, count: count(f.key) }))}
+              value={filter}
+              onChange={onFilter}
+            />
+          </div>
         </div>
 
-        <div data-reveal="right" className="filter-bar" role="group" aria-label="Filter missions">
-          {FILTERS.map((f, i) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              aria-pressed={filter === f.key}
-              className="pressable"
-              style={{
-                border: 'none',
-                borderLeft: i === 0 ? 'none' : `2px solid ${INK}`,
-                padding: '9px clamp(12px, 2.6vw, 16px)',
-                fontFamily: 'inherit',
-                fontWeight: 800,
-                fontSize: 12,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                cursor: 'pointer',
-                background: filter === f.key ? INK : PAPER,
-                color: filter === f.key ? 'var(--paper)' : INK,
-              }}
-            >
-              {f.label}
-            </button>
+        <div
+          style={{
+            marginTop: 44,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(330px, 100%), 1fr))',
+            gap: '36px 30px',
+          }}
+        >
+          {visible.map((p, i) => (
+            <div key={`${filter}-${p.id}`} className="reveal" style={{ '--d': `${i * 110}ms` } as CSSProperties}>
+              <article
+                id={`project-${p.id}`}
+                className="project-card"
+                style={{ height: '100%', display: 'flex', flexDirection: 'column', background: PAPER, border: `4px solid ${INK}` }}
+              >
+                <div
+                  className="project-cover"
+                  aria-hidden="true"
+                  style={{
+                    position: 'relative',
+                    height: 200,
+                    padding: 20,
+                    display: 'grid',
+                    placeItems: 'center',
+                    overflow: 'hidden',
+                    backgroundColor: p.coverBg,
+                    backgroundImage: p.tone,
+                    backgroundSize: '12px 12px',
+                    borderBottom: `4px solid ${INK}`,
+                  }}
+                >
+                  <span
+                    className="cover-title"
+                    style={{
+                      color: PAPER,
+                      fontFamily: DISPLAY_FONT,
+                      lineHeight: 1.05,
+                      textAlign: 'center',
+                      WebkitTextStroke: `2px ${INK}`,
+                      textShadow: `4px 4px 0 ${INK}`,
+                    }}
+                  >
+                    {p.name}
+                  </span>
+                </div>
+
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '22px 22px 24px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
+                    <span
+                      style={{
+                        padding: '4px 11px',
+                        background: p.kind === 'mobile' ? SPOT : INK,
+                        color: PAPER,
+                        borderRadius: 999,
+                        fontSize: 13,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {p.type}
+                    </span>
+                    <span style={{ color: MUTED, fontSize: 14, fontWeight: 700 }}>{p.years}</span>
+                  </div>
+                  <h3 style={{ marginTop: 12, color: INK, fontFamily: DISPLAY_FONT, fontWeight: 400, fontSize: 26, lineHeight: 1.15 }}>
+                    {p.name}
+                  </h3>
+                  <p style={{ marginTop: 10, color: BODY, fontSize: 16.5, lineHeight: 1.6 }}>{p.desc}</p>
+                  <p style={{ marginTop: 18, color: MUTED, fontSize: 14, fontWeight: 700 }}>Built with</p>
+                  <ul style={{ listStyle: 'none', margin: '8px 0 0', padding: 0, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {p.tech.map((t) => (
+                      <li
+                        key={t}
+                        style={{
+                          padding: '5px 11px',
+                          background: PAPER,
+                          color: INK,
+                          border: `2px solid ${INK}`,
+                          fontSize: 13.5,
+                          fontWeight: 700,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                  <div style={{ marginTop: 'auto', paddingTop: 22 }}>
+                    <div style={{ paddingTop: 16, borderTop: `3px solid ${INK}` }}>
+                      {p.link ? (
+                        <a href={p.link} target="_blank" rel="noopener noreferrer" className="ext" style={extLinkStyle}>
+                          <span>Visit {p.domain}</span>
+                          <ArrowUpRight />
+                          <span className="sr-only">(opens in a new tab)</span>
+                        </a>
+                      ) : (
+                        <a href="#contact" className="ext" style={extLinkStyle}>
+                          <span>Ask me about this app</span>
+                          <ArrowUpRight />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
           ))}
         </div>
       </div>
-
-      <div className="grid-cards">
-        {visible.map((proj, i) => (
-          <article
-            key={proj.name}
-            className="card"
-            data-reveal="up"
-            data-delay={i * 70}
-            style={{ display: 'flex', flexDirection: 'column' }}
-          >
-            <div
-              style={{
-                position: 'relative',
-                height: 132,
-                borderBottom: `2px solid ${INK}`,
-                background:
-                  'repeating-conic-gradient(from 0deg at 50% 50%, var(--ink) 0deg 0.9deg, transparent 0.9deg 7deg)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}
-            >
-              <span
-                className="t-sfx"
-                style={{
-                  fontSize: 'clamp(24px, 6vw, 31px)',
-                  color: INK,
-                  background: PAPER,
-                  border: `2px solid ${INK}`,
-                  padding: '2px 15px',
-                  transform: 'rotate(-3deg)',
-                }}
-              >
-                {proj.sfx}
-              </span>
-              <span
-                className="t-sfx"
-                style={{
-                  position: 'absolute',
-                  top: 9,
-                  left: 9,
-                  background: proj.rankBg,
-                  color: proj.rankFg,
-                  border: `2px solid ${INK}`,
-                  fontSize: 14,
-                  padding: '1px 9px',
-                }}
-              >
-                {proj.rank}
-              </span>
-            </div>
-
-            <div
-              style={{
-                padding: 'clamp(16px, 2.8vw, 20px)',
-                display: 'flex',
-                flexDirection: 'column',
-                flex: 1,
-              }}
-            >
-              <h3
-                className="t-display"
-                style={{ fontSize: 'clamp(19px, 4vw, 22px)', margin: 0, color: INK }}
-              >
-                {proj.name}
-              </h3>
-              <div className="t-label" style={{ color: ORANGE_INK, margin: '6px 0 10px' }}>
-                {proj.category}
-              </div>
-
-              {/* flex:1 rather than the old min-height guess — the cards line
-                  up because the column stretches, not because 66px happened to
-                  fit the longest description at one particular width */}
-              <p className="t-body" style={{ margin: '0 0 16px', flex: 1, fontSize: 14 }}>
-                {proj.desc}
-              </p>
-
-              <ul
-                style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 6,
-                  margin: '0 0 15px',
-                  padding: 0,
-                  listStyle: 'none',
-                }}
-              >
-                {proj.tech.map((t) => (
-                  <li
-                    key={t}
-                    className="chip t-mono"
-                    style={{ fontSize: 11, padding: '3px 8px' }}
-                  >
-                    {t}
-                  </li>
-                ))}
-              </ul>
-
-              <div
-                style={{
-                  borderTop: `2px solid ${INK}`,
-                  paddingTop: 13,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 14,
-                }}
-              >
-                <a
-                  className="link t-label"
-                  href={proj.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`View ${proj.name} live`}
-                >
-                  View live ↗
-                </a>
-                <span className="t-label" style={{ color: INK_45 }}>
-                  {proj.year}
-                </span>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <p className="t-body" style={{ margin: '16px 0 0', fontSize: 12.5, color: INK_70 }} aria-live="polite">
-        {visible.length} {visible.length === 1 ? 'mission' : 'missions'} shown
-      </p>
     </section>
   );
 }
