@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from 'react';
 import { ArrowUpRight } from '@/components/icons';
+import { ToolLogo } from '@/components/logos';
 import { FilterButtons, SectionHeading, extLinkStyle, sectionStyle } from '@/components/ui';
 import { BODY, DISPLAY_FONT, INK, MUTED, PAPER, PROJECT_FILTERS, PROJECTS, SPOT, YELLOW, type ProjectFilter } from '@/lib/data';
 
@@ -116,7 +117,10 @@ export default function Projects({ filter, onFilter }: { filter: ProjectFilter; 
                       <li
                         key={t}
                         style={{
-                          padding: '5px 11px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 7,
+                          padding: '5px 11px 5px 9px',
                           background: PAPER,
                           color: INK,
                           border: `2px solid ${INK}`,
@@ -125,7 +129,8 @@ export default function Projects({ filter, onFilter }: { filter: ProjectFilter; 
                           lineHeight: 1.3,
                         }}
                       >
-                        {t}
+                        <ToolLogo name={t} size={15} />
+                        <span>{t}</span>
                       </li>
                     ))}
                   </ul>

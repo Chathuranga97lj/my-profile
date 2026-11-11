@@ -18,7 +18,9 @@ colour means changing both.
 **Copy stays plain English.** The owner asked for the anime/Naruto vocabulary
 (jutsu, missions, chakra, ranks, Japanese text) to go because ordinary visitors
 couldn't follow it. The manga feel comes from the visuals only. Every tool chip
-needs a one-line explanation in `TOOL_INFO`.
+needs a one-line explanation in `TOOL_INFO`, and a logo path in
+`components/logos.tsx` (copied from Simple Icons, never fetched at build time;
+tools without one, like REST APIs, fall back to a `{ }` mark).
 
 ## Fonts: self-hosted, never from Google at build time
 

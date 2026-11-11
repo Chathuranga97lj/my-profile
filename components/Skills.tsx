@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties } from 'react';
 import { ArrowDown } from '@/components/icons';
+import { ToolLogo } from '@/components/logos';
 import { SectionHeading, TailLeft, sectionStyle } from '@/components/ui';
 import { BODY, DISPLAY_FONT, INK, MUTED, PAPER, PROJECTS, SKILL_GROUPS, SPOT, TEXT, TOOL_INFO, YELLOW } from '@/lib/data';
 
@@ -54,7 +55,10 @@ export default function Skills({ onJump }: { onJump: (projectId: string) => void
                             onFocus={() => setTool(name)}
                             onClick={() => setTool(name)}
                             style={{
-                              padding: '11px 18px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 9,
+                              padding: '11px 18px 11px 14px',
                               background: on ? SPOT : PAPER,
                               color: on ? PAPER : INK,
                               border: `3px solid ${INK}`,
@@ -67,7 +71,8 @@ export default function Skills({ onJump }: { onJump: (projectId: string) => void
                               cursor: 'pointer',
                             }}
                           >
-                            {name}
+                            <ToolLogo name={name} />
+                            <span>{name}</span>
                           </button>
                         </li>
                       );
@@ -98,6 +103,9 @@ export default function Skills({ onJump }: { onJump: (projectId: string) => void
                   <h3
                     style={{
                       marginTop: 6,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 14,
                       color: INK,
                       fontFamily: DISPLAY_FONT,
                       fontWeight: 400,
@@ -105,7 +113,8 @@ export default function Skills({ onJump }: { onJump: (projectId: string) => void
                       lineHeight: 1.1,
                     }}
                   >
-                    {tool}
+                    <ToolLogo name={tool} size={36} />
+                    <span>{tool}</span>
                   </h3>
                   <p style={{ marginTop: 12, color: TEXT, fontSize: 18, lineHeight: 1.55 }}>{TOOL_INFO[tool]}</p>
                   <p style={{ marginTop: 22, color: MUTED, fontSize: 14, fontWeight: 700 }}>Used in</p>
