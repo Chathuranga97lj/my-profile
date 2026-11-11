@@ -78,7 +78,12 @@ the track from overflowing viewports narrower than the floor.
   `scrolled` / `active` / `showTop` go through React state.
 - **Portrait lens:** `--lens-x` / `--lens-y` follow the cursor instantly while
   `--lens-r` animates — it is registered with `@property` at the top of
-  `globals.css` so the radius can transition on its own.
+  `globals.css` so the radius can transition on its own. Touch has no hover and
+  a drag scrolls the page, so fingers get their own path in `Hero.tsx`: a tap
+  grows the photo from the finger, press-and-hold then drag moves the lens
+  (drawn above the fingertip), and a native non-passive `touchmove` listener
+  blocks scrolling only while holding. Keep hover handlers off `pointerType
+  === "touch"`.
 
 Every animation needs a `prefers-reduced-motion: reduce` escape in the block at
 the bottom of `globals.css`.

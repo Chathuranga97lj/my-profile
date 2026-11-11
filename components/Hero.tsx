@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useRef, useState, type CSSProperties, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { TailDown } from '@/components/ui';
 import { BODY, CJ_LETTERS, DISPLAY_FONT, FACTS, INK, MUTED, NAME_LINES, PAPER, SPOT } from '@/lib/data';
 
@@ -17,43 +17,55 @@ export default function Hero() {
 
   /**
    * The lens is three CSS variables on the portrait: --lens-x / --lens-y follow
-   * the cursor instantly, --lens-r animates (it is a registered @property).
-   * They are written straight to the element so the cursor never re-renders.
+   * the pointer instantly, --lens-r animates (it is a registered @property).
+   * They are written straight to the element so the pointer never re-renders.
+   *
+   * A mouse (or pen) hovers: the lens follows it. A finger can't hover, and a
+   * drag would scroll the page, so touch works differently:
+   *  - tap: the photo spreads out from the finger to fill the panel (tap again
+   *    to shrink it back), the same as the "Show my photo" button;
+   *  - press and hold, then drag: the lens follows the finger, drawn a little
+   *    above it so the fingertip doesn't hide it. Scrolling is held off only
+   *    while holding, so a normal swipe over the drawing still scrolls.
    */
-  const aim = (el: HTMLDivElement, e: MouseEvent) => {
+  const touch = useRef<{ id: number; x: number; y: number; timer: number; holding: boolean } | null>(null);
+
+  /** `lift` raises the lens above the point, for a finger. */
+  const aim = (el: HTMLDivElement, clientX: number, clientY: number, lift = 0) => {
     const r = el.getBoundingClientRect();
-    el.style.setProperty('--lens-x', `${(e.clientX - r.left - el.clientLeft).toFixed(1)}px`);
-    el.style.setProperty('--lens-y', `${(e.clientY - r.top - el.clientTop).toFixed(1)}px`);
+    el.style.setProperty('--lens-x', `${(clientX - r.left - el.clientLeft).toFixed(1)}px`);
+    el.style.setProperty('--lens-y', `${(clientY - r.top - el.clientTop - lift).toFixed(1)}px`);
   };
 
-  const onEnter = (e: MouseEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    aim(el, e);
-    if (!photo) {
-      el.style.setProperty('--lens-r', `${Math.round(clamp(el.clientWidth * 0.21, 56, 104))}px`);
-      el.classList.add('is-lens');
-    }
+  const lensSize = (el: HTMLDivElement, scale: number) => Math.round(clamp(el.clientWidth * scale, 56, 110));
+
+  const showLens = (el: HTMLDivElement, r: number) => {
+    el.style.setProperty('--lens-r', `${r}px`);
+    el.classList.add('is-lens');
     setHintSeen(true);
   };
 
-  const onMove = (e: MouseEvent<HTMLDivElement>) => aim(e.currentTarget, e);
-
-  const onLeave = (e: MouseEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
+  const hideLens = (el: HTMLDivElement) => {
     el.classList.remove('is-lens');
     if (!photo) el.style.setProperty('--lens-r', '0px');
   };
 
-  // "Show my photo" grows the lens until it covers the whole panel.
-  const togglePhoto = () => {
+  /**
+   * Grows the lens from (x, y), in panel pixels, until it covers the whole
+   * panel, or shrinks it back into the point it came from.
+   */
+  const setPhotoFrom = (next: boolean, x?: number, y?: number) => {
     const el = portrait.current;
-    const next = !photo;
     if (el) {
       el.classList.remove('is-lens');
       if (next) {
-        el.style.setProperty('--lens-x', `${(el.clientWidth / 2).toFixed(1)}px`);
-        el.style.setProperty('--lens-y', `${(el.clientHeight * 0.32).toFixed(1)}px`);
-        el.style.setProperty('--lens-r', `${Math.ceil(Math.hypot(el.clientWidth, el.clientHeight))}px`);
+        const cx = x ?? el.clientWidth / 2;
+        const cy = y ?? el.clientHeight * 0.32;
+        el.style.setProperty('--lens-x', `${cx.toFixed(1)}px`);
+        el.style.setProperty('--lens-y', `${cy.toFixed(1)}px`);
+        // Far enough to reach the furthest corner.
+        const reach = Math.hypot(Math.max(cx, el.clientWidth - cx), Math.max(cy, el.clientHeight - cy));
+        el.style.setProperty('--lens-r', `${Math.ceil(reach) + 8}px`);
       } else {
         el.style.setProperty('--lens-r', '0px');
       }
@@ -61,6 +73,90 @@ export default function Hero() {
     setPhoto(next);
     setHintSeen(true);
   };
+
+  const togglePhoto = () => setPhotoFrom(!photo);
+
+  // Mouse and pen: hover.
+  const onEnter = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'touch') return;
+    const el = e.currentTarget;
+    aim(el, e.clientX, e.clientY);
+    if (!photo) showLens(el, lensSize(el, 0.21));
+    else setHintSeen(true);
+  };
+
+  const onLeave = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'touch') hideLens(e.currentTarget);
+  };
+
+  // Touch: tap, or press and hold.
+  const endTouch = () => {
+    const t = touch.current;
+    if (!t) return;
+    window.clearTimeout(t.timer);
+    if (t.holding && portrait.current) hideLens(portrait.current);
+    touch.current = null;
+  };
+
+  const onDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'touch' || touch.current) return;
+    const el = e.currentTarget;
+    const t = { id: e.pointerId, x: e.clientX, y: e.clientY, timer: 0, holding: false };
+    t.timer = window.setTimeout(() => {
+      // Held still: switch to the lens. Not over a fully shown photo.
+      if (photo) return;
+      t.holding = true;
+      const r = lensSize(el, 0.26);
+      aim(el, t.x, t.y, r * 0.75);
+      showLens(el, r);
+      navigator.vibrate?.(8);
+    }, 260);
+    touch.current = t;
+  };
+
+  const onMove = (e: PointerEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (e.pointerType !== 'touch') {
+      aim(el, e.clientX, e.clientY);
+      return;
+    }
+    const t = touch.current;
+    if (!t || t.id !== e.pointerId) return;
+    if (t.holding) {
+      aim(el, e.clientX, e.clientY, lensSize(el, 0.26) * 0.75);
+    } else if (Math.hypot(e.clientX - t.x, e.clientY - t.y) > 10) {
+      // Moved before the hold kicked in: the reader is scrolling.
+      window.clearTimeout(t.timer);
+      touch.current = null;
+    }
+  };
+
+  const onUp = (e: PointerEvent<HTMLDivElement>) => {
+    const t = touch.current;
+    if (e.pointerType !== 'touch' || !t || t.id !== e.pointerId) return;
+    if (!t.holding) {
+      // A quick tap: reveal from the finger, or hide again.
+      const el = e.currentTarget;
+      const r = el.getBoundingClientRect();
+      setPhotoFrom(!photo, e.clientX - r.left - el.clientLeft, e.clientY - r.top - el.clientTop);
+    }
+    endTouch();
+  };
+
+  // While holding, stop the drag from scrolling the page. This has to be a
+  // native, non-passive listener: React's touch listeners are passive.
+  useEffect(() => {
+    const el = portrait.current;
+    if (!el) return;
+    const block = (e: TouchEvent) => {
+      if (touch.current?.holding && e.cancelable) e.preventDefault();
+    };
+    el.addEventListener('touchmove', block, { passive: false });
+    return () => {
+      el.removeEventListener('touchmove', block);
+      window.clearTimeout(touch.current?.timer);
+    };
+  }, []);
 
   return (
     <section
@@ -247,7 +343,7 @@ export default function Hero() {
                   }}
                 >
                   <span className="only-hover">Hover over the drawing to see the real me</span>
-                  <span className="only-touch">Tap the drawing to see the real me</span>
+                  <span className="only-touch">Tap the drawing, or hold and drag, to see the real me</span>
                   <TailDown left={34} tipX={20} />
                 </div>
               )}
@@ -255,9 +351,16 @@ export default function Hero() {
               <div
                 ref={portrait}
                 className="portrait"
-                onMouseEnter={onEnter}
-                onMouseMove={onMove}
-                onMouseLeave={onLeave}
+                onPointerEnter={onEnter}
+                onPointerLeave={onLeave}
+                onPointerDown={onDown}
+                onPointerMove={onMove}
+                onPointerUp={onUp}
+                onPointerCancel={endTouch}
+                // A long press would otherwise open the save-image menu.
+                onContextMenu={(e) => {
+                  if (touch.current) e.preventDefault();
+                }}
                 style={
                   {
                     '--lens-x': '50%',

@@ -200,6 +200,9 @@ button { font-family: inherit; }
 
 /* Portrait lens: a circle that follows the cursor and shows the real photo */
 .portrait { transition: --lens-r .45s cubic-bezier(.2, .8, .2, 1); animation: inkIn 1s cubic-bezier(.77, 0, .18, 1) .1s both; }
+/* Touch: no grey tap flash, no text selection or iOS save-image callout on a long press. */
+.portrait { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; }
+.portrait img { -webkit-user-drag: none; }
 .lens-ring { opacity: 0; transition: opacity .2s; }
 .portrait.is-lens .lens-ring { opacity: 1; }
 .hint { animation: pop .55s cubic-bezier(.2, .8, .2, 1) 1.3s backwards, bob 3.2s ease-in-out 2s infinite; }
