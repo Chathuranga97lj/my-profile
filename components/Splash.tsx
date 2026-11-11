@@ -1,155 +1,183 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { SEQUENCE } from '@/lib/data';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { SEQUENCE, INK, ORANGE, ON_INK, ON_INK_45, TERM } from '@/lib/data';
+
+/** ms each hand sign holds. Three signs → the whole seal is ~1.1s. */
+const STEP_MS = 380;
+const FADE_MS = 300;
 
 export default function Splash({ onDone }: { onDone: () => void }) {
-  const [progress, setProgress] = useState(0);
+  const [step, setStep] = useState(0);
   const [exiting, setExiting] = useState(false);
-  const finished = useRef(false);
+  const done = useRef(false);
 
-  const step = Math.min(SEQUENCE.length - 1, Math.floor(progress / (100 / SEQUENCE.length)));
-  const cur = SEQUENCE[step];
-
-  const finish = () => {
-    if (finished.current) return;
-    finished.current = true;
+  /**
+   * Every exit path lands here, and it only fires once — a click that lands in
+   * the same frame as the timer finishing would otherwise unmount twice.
+   */
+  const finish = useCallback(() => {
+    if (done.current) return;
+    done.current = true;
+    try {
+      sessionStorage.setItem('splash-seen', '1');
+    } catch {
+      /* private mode — the splash just plays again next navigation */
+    }
     setExiting(true);
-    setTimeout(onDone, 650);
-  };
+    setTimeout(onDone, FADE_MS);
+  }, [onDone]);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setProgress((p) => {
-        const next = Math.min(100, p + 2);
-        if (next >= 100) {
-          clearInterval(id);
-          finish();
-        }
-        return next;
-      });
-    }, 70);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const timers = SEQUENCE.map((_, i) =>
+      setTimeout(() => setStep(i), i * STEP_MS)
+    );
+    const end = setTimeout(finish, SEQUENCE.length * STEP_MS);
+
+    // Escape is the universal "let me out". Any click works too — the whole
+    // overlay is a dismiss target, the button just makes that discoverable.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') finish();
+    };
+    window.addEventListener('keydown', onKey);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(end);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [finish]);
+
+  const cur = SEQUENCE[step];
 
   return (
     <div
+      id="splash"
+      role="status"
+      aria-label="Loading"
+      onClick={finish}
       style={{
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: '#14110F',
-        backgroundImage: 'radial-gradient(#ffffff10 1px, transparent 1px)',
-        backgroundSize: '6px 6px',
+        background: INK,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden',
+        gap: 'clamp(18px, 4vw, 26px)',
         padding: '24px 16px',
-        animation: exiting ? 'splashOut .6s ease-in forwards' : 'none',
+        cursor: 'pointer',
+        animation: exiting ? `splashOut ${FADE_MS}ms var(--ease-out) forwards` : 'none',
       }}
     >
+      {/* The seal. One rotating ring and a core, where the old build stacked
+          five spinning layers and an animated box-shadow glow — that was a lot
+          of paint for something on screen for a second. */}
       <div
+        aria-hidden
         style={{
-          position: 'absolute',
-          inset: 0,
-          opacity: 0.25,
-          background:
-            'repeating-conic-gradient(from 0deg at 50% 50%, #F97316 0deg 0.8deg, transparent 0.8deg 6deg)',
-          animation: 'rasenganSpin 26s linear infinite',
+          position: 'relative',
+          width: 'clamp(96px, min(28vw, 22vh), 132px)',
+          aspectRatio: '1',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          animation: 'sealIn 320ms var(--ease-out) both',
         }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: '22%',
-          height: 2,
-          background: 'linear-gradient(90deg, transparent, #F97316, transparent)',
-          animation: 'streak 2.2s ease-in-out infinite',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: '26%',
-          height: 2,
-          background: 'linear-gradient(90deg, transparent, #38BDF8, transparent)',
-          animation: 'streak 2.8s ease-in-out infinite',
-        }}
-      />
-
-      {/* The orb sizes off both axes — vh matters because a phone in landscape
-          is short, not narrow. Inner rings are percentages of it so the whole
-          thing scales as one piece. */}
-      <div style={{ position: 'relative', width: 'clamp(148px, min(46vw, 34vh), 220px)', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid rgba(56,189,248,.35)', animation: 'ringOut 1.8s ease-out infinite' }} />
-        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid rgba(249,115,22,.35)', animation: 'ringOut 1.8s ease-out infinite .9s' }} />
-        <div style={{ position: 'absolute', width: '77%', aspectRatio: '1', borderRadius: '50%', border: '4px dashed rgba(56,189,248,.55)', animation: 'rasenganSpin 3s linear infinite' }} />
-        <div style={{ position: 'absolute', width: '59%', aspectRatio: '1', borderRadius: '50%', border: '3px solid rgba(147,197,253,.7)', borderTopColor: 'transparent', borderLeftColor: 'transparent', animation: 'rasenganSpinRev 1.6s linear infinite' }} />
+      >
         <div
           style={{
-            width: '44%',
+            position: 'absolute',
+            inset: 0,
+            borderRadius: '50%',
+            border: `3px dashed ${ORANGE}`,
+            opacity: 0.55,
+            animation: 'sealSpin 4s linear infinite',
+          }}
+        />
+        <div
+          style={{
+            width: '62%',
             aspectRatio: '1',
             borderRadius: '50%',
-            background: 'radial-gradient(circle at 35% 30%, #E0F2FE, #38BDF8 45%, #0EA5E9 75%)',
-            animation: 'corePulse 1.4s ease-in-out infinite',
+            background: ORANGE,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <span style={{ fontFamily: 'var(--font-antique), serif', fontSize: 'clamp(23px, 6.5vw, 34px)', color: '#0C4A6E' }}>忍</span>
+          <span
+            className="t-kanji"
+            style={{ fontSize: 'clamp(26px, 7vw, 36px)', color: 'var(--fixed-ink)' }}
+          >
+            忍
+          </span>
         </div>
       </div>
 
-      <div style={{ marginTop: 'clamp(22px, 5vw, 34px)', fontFamily: 'var(--font-bangers), cursive', fontSize: 'clamp(26px, 8vw, 44px)', letterSpacing: 'clamp(2px, 1vw, 4px)', color: '#F97316', textShadow: '4px 4px 0 #B91C1C' }}>
-        RASENGAN BUILD
+      {/* Fixed min-height: the sign line can wrap to two rows on a narrow
+          screen, and letting it reflow would bounce the bar below it. */}
+      <div
+        key={step}
+        style={{
+          minHeight: 44,
+          width: 'min(400px, 86vw)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 4,
+          textAlign: 'center',
+          animation: 'signPop 240ms var(--ease-out)',
+        }}
+      >
+        <span className="t-kanji" style={{ fontSize: 'clamp(17px, 4.4vw, 21px)', color: ON_INK }}>
+          {cur.sign}
+        </span>
+        <span className="t-mono" style={{ color: TERM }}>
+          {cur.text}
+        </span>
       </div>
 
-      {/* the hand-sign line can be two rows on a narrow screen, so it grows
-          downward from a floor rather than being pinned to a fixed height */}
-      <div key={step} style={{ marginTop: 6, minHeight: 34, width: 'min(440px, 86vw)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 'clamp(8px, 2.5vw, 14px)', textAlign: 'center', animation: 'signPop .35s ease-out' }}>
-        <span style={{ fontFamily: 'var(--font-antique), serif', fontSize: 'clamp(19px, 5vw, 24px)', color: '#F7F2E5' }}>{cur.sign}</span>
-        <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 'clamp(13px, 3.4vw, 16px)', fontWeight: 700, color: '#7DD3A0' }}>{cur.text}</span>
-      </div>
-
-      <div style={{ marginTop: 'clamp(18px, 4vw, 26px)', width: 'min(440px, 78vw)', border: '3px solid #F7F2E5', background: '#0B0908', height: 22, padding: 3 }}>
+      {/* scaleX rather than width — it composites, and it needs no per-frame
+          React state to drive it */}
+      <div
+        aria-hidden
+        style={{
+          width: 'min(400px, 78vw)',
+          height: 5,
+          background: 'var(--on-ink-45)',
+          overflow: 'hidden',
+        }}
+      >
         <div
           style={{
             height: '100%',
-            width: `${progress}%`,
-            background: 'repeating-linear-gradient(135deg, #F97316 0 10px, #EA580C 10px 20px)',
-            transition: 'width .25s linear',
+            background: ORANGE,
+            transformOrigin: 'left',
+            transform: `scaleX(${(step + 1) / SEQUENCE.length})`,
+            transition: `transform ${STEP_MS}ms linear`,
           }}
         />
-      </div>
-      <div style={{ marginTop: 10, fontFamily: 'ui-monospace, monospace', fontSize: 13, color: '#8A8377', letterSpacing: 2 }}>
-        CHAKRA {progress}% · 印を結ぶ
       </div>
 
       <button
         onClick={finish}
+        className="pressable"
         style={{
-          position: 'absolute',
-          right: 'clamp(14px, 4vw, 26px)',
-          bottom: 'clamp(14px, 4vw, 24px)',
           background: 'transparent',
-          border: '2px solid #4A443C',
-          color: '#8A8377',
-          fontFamily: 'var(--font-bangers), cursive',
-          letterSpacing: 2,
-          fontSize: 16,
+          border: `2px solid ${ON_INK_45}`,
+          color: ON_INK_45,
+          fontWeight: 700,
+          fontSize: 12,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
           padding: '7px 16px',
           cursor: 'pointer',
         }}
       >
-        SKIP · カイ！
+        Skip · カイ
       </button>
     </div>
   );
