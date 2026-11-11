@@ -3,40 +3,45 @@
 import { useEffect } from 'react';
 
 /**
- * Adds `.is-in` to every [data-reveal] element once it scrolls into view.
- * `data-delay="120"` (ms) staggers siblings.
- * Re-scans on DOM changes so filtered/late-mounted cards animate too.
+ * Panels "ink in" (a left-to-right wipe) the first time they scroll into view.
+ *
+ * Adds `.is-in` to every `.reveal` element once it is on screen. A `--d`
+ * custom property on the element (e.g. `--d: 120ms`) staggers siblings.
+ * Re-scans on DOM changes so filtered or late-mounted cards animate too.
  */
-export function useReveal(active: boolean = true) {
+export function useReveal() {
   useEffect(() => {
-    if (!active) return;
+    const pending = () => document.querySelectorAll<HTMLElement>('.reveal:not(.is-in)');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const observer = new IntersectionObserver(
+    // No observer, or motion turned off: just show everything as it mounts.
+    if (reduce || typeof IntersectionObserver !== 'function') {
+      const showAll = () => pending().forEach((el) => el.classList.add('is-in'));
+      showAll();
+      const mo = new MutationObserver(showAll);
+      mo.observe(document.body, { childList: true, subtree: true });
+      return () => mo.disconnect();
+    }
+
+    const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
-          const el = entry.target as HTMLElement;
-          el.style.transitionDelay = `${el.dataset.delay ?? 0}ms`;
-          el.classList.add('is-in');
-          observer.unobserve(el);
+          entry.target.classList.add('is-in');
+          io.unobserve(entry.target);
         });
       },
-      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
+      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
     );
 
-    const scan = () => {
-      document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-in)').forEach((el) => {
-        observer.observe(el);
-      });
-    };
-
+    const scan = () => pending().forEach((el) => io.observe(el));
     scan();
     const mo = new MutationObserver(scan);
     mo.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      observer.disconnect();
+      io.disconnect();
       mo.disconnect();
     };
-  }, [active]);
+  }, []);
 }

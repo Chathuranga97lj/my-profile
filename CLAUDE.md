@@ -1,34 +1,38 @@
 @AGENTS.md
 
-# Personal portfolio — manga/shonen themed single page
+# Personal portfolio — manga-magazine styled single page, plain-English copy
 
 Next.js 16 (App Router, Turbopack) + React 19. One route: `app/page.tsx`.
 pnpm is the package manager (`pnpm-lock.yaml`).
 
 ## Content lives in `lib/data.ts`
 
-Projects, timeline, stack, ranks, links and the splash hand-sign sequence are
-all exported constants. To change what the site *says*, edit that file — the
-components only render it. Colour tokens (`INK`, `PAPER`, `ORANGE`, …) are
-exported from there too, and mirrored as CSS variables in `app/globals.css`.
-Changing a colour means changing both.
+Links, quick facts, skill groups and their plain-language explanations
+(`TOOL_INFO`), projects, the experience timeline, certificates and the
+"How I work" principles are all exported constants. To change what the site
+*says*, edit that file — the components only render it. Colour tokens (`INK`,
+`PAPER`, `SPOT`, the newsprint tints `YELLOW`/`BLUE`/`PINK`, …) are exported
+from there too, and mirrored as CSS variables in `app/globals.css`. Changing a
+colour means changing both.
 
-## Fonts: do not reintroduce a Japanese Google font for body text
+**Copy stays plain English.** The owner asked for the anime/Naruto vocabulary
+(jutsu, missions, chakra, ranks, Japanese text) to go because ordinary visitors
+couldn't follow it. The manga feel comes from the visuals only. Every tool chip
+needs a one-line explanation in `TOOL_INFO`.
 
-The body face was Zen Kaku Gothic New and **it broke the production build**.
-Google serves Japanese fonts as ~120 dynamically-subsetted `.woff2` chunks per
-weight, and `subsets: ['latin']` does not filter them — Next tried to fetch
-~480 files at build time, `fonts.gstatic.com` throttled the connections, and
-the failures surfaced as a misleading
+## Fonts: self-hosted, never from Google at build time
+
+Both faces load through `next/font/local` from `app/fonts` (with their OFL
+licence files): **Dela Gothic One** (latin subset, one weight) for headings via
+`--font-display`, and **Figtree** (latin variable font, 300–900 in one file) for
+body text via `--font-body`.
+
+Keep it that way. A Japanese Google font once **broke the production build**:
+Google serves Japanese faces as ~120 dynamically-subsetted `.woff2` chunks per
+weight, `subsets: ['latin']` does not filter them, `fonts.gstatic.com`
+throttled the ~480 fetches, and the failure surfaced as a misleading
 `Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'`.
-
-Body text is now **Figtree**, a latin variable font: the whole 300–900 range is
-one file. It still exposes `--font-zen`, so components did not change.
-
-`Zen_Antique` (`--font-antique`) is still loaded and is fine — it is a single
-weight and only renders the kanji accents (忍道, 術の書, 任務記録, …). Keep it
-that way. If a Japanese face is ever wanted for body copy, self-host the
-`.woff2` via `next/font/local` rather than pulling it from Google.
+Dela Gothic One is a Japanese face too — only its latin `.woff2` is committed.
 
 ## Styling: inline styles + `clamp()`, classes only where clamp can't reach
 
@@ -37,32 +41,44 @@ installed but `globals.css` does not use it). Responsiveness follows two rules:
 
 - **Fluid type and spacing use `clamp()` inline.** No breakpoint needed.
 - **Layout changes that clamp cannot express** — collapsing a grid, restacking
-  a flex row — live in classes in `globals.css` (`.hero-grid`, `.chapter-bar`,
-  `.rank-strip`, `.filter-bar`, `.shell`).
+  a flex row, swapping the nav for the menu button — live in classes in
+  `globals.css` (`.hero-grid`, `.skills-layout`, `.skill-detail`, `.timeline`,
+  `.nav-links`, `.nav-cta`, `.nav-burger`).
 
 **The gotcha:** inline styles outrank media queries. If a property needs to
 change at a breakpoint, its base value must move *out* of the inline style and
-into the class, or the media query will silently do nothing.
+into the class, or the media query will silently do nothing. The same goes for
+hover states: `.btn` elements set their resting shadow inline *and* a
+`--hover-shadow` custom property, and the `:hover` rule uses `!important` to
+swap it in.
 
-Card grids use `minmax(min(330px, 100%), 1fr)`. The `min()` is what stops the
-track from overflowing viewports narrower than the floor — plain
-`minmax(330px, 1fr)` was the original mobile bug.
+The hero name is sized by `.hero-name` with container-query units against its
+own column, so "L Jayawardhana" never wraps mid-word. Don't give it an inline
+`fontSize`.
 
-## Splash → hero handoff
+Card grids use `minmax(min(<floor>px, 100%), 1fr)`. The `min()` is what stops
+the track from overflowing viewports narrower than the floor.
 
-`Splash` covers the viewport and unmounts when `loaded` flips in `page.tsx`.
-`<main>` renders underneath it from first paint, so **any hero entrance
-animation must be paired with holding the panels invisible** (`.clone-wait`,
-`opacity: 0`) until `ready` is true. Otherwise the hero is visible through the
-splash's fade and then animates a second time — it reads as a double reveal.
+## Motion
 
-Panels enter with a Kage Bunshin poof: `cloneIn` (springy overshoot) plus a
-`::after` smoke puff (`cloneSmoke`), staggered 90ms apart via a `--d` custom
-property that both keyframes read so puff and panel stay in sync. There is
-deliberately **no page-level entrance animation** on `<main>`.
+- **Page load:** the hero is the one orchestrated moment — name letters rise in
+  one by one (`.letter`, delay set per letter), C and J (`.cj`) bounce once to
+  spell the CJ monogram, and the other hero pieces use `.rise` / `.pop` with a
+  `--d` delay. There is no splash screen.
+- **Scroll reveal:** anything with `.reveal` inks in (a left-to-right
+  `clip-path` wipe) when `useReveal` adds `.is-in`. The waiting state must stay
+  `opacity: 0`, **not** a clip-path: Chromium's IntersectionObserver treats an
+  element clipped by its own `clip-path` as off-screen, so it never fires and
+  the panel stays hidden forever. Stagger siblings with `--d`.
+- **Scroll-linked:** `useScrollEffects` writes the header progress line, hero
+  parallax and timeline fill straight to the DOM in one rAF per frame; only
+  `scrolled` / `active` / `showTop` go through React state.
+- **Portrait lens:** `--lens-x` / `--lens-y` follow the cursor instantly while
+  `--lens-r` animates — it is registered with `@property` at the top of
+  `globals.css` so the radius can transition on its own.
 
 Every animation needs a `prefers-reduced-motion: reduce` escape in the block at
-the bottom of the animations section.
+the bottom of `globals.css`.
 
 ## Verifying work
 

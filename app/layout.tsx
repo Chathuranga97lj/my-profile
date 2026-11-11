@@ -1,31 +1,47 @@
 import type { Metadata } from 'next';
-import { Anton, Bangers, Figtree, Zen_Antique } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
-const anton = Anton({ weight: '400', subsets: ['latin'], variable: '--font-anton', display: 'swap' });
-const bangers = Bangers({ weight: '400', subsets: ['latin'], variable: '--font-bangers', display: 'swap' });
+// Both faces are self-hosted from app/fonts (SIL Open Font License, see the
+// OFL-*.txt files), so the build never has to reach Google Fonts.
 
-// Body face. A latin variable font — the whole 300–900 range ships as one file,
-// so every weight the design uses (500/700/900) is covered by a single request.
-const body = Figtree({ subsets: ['latin'], variable: '--font-zen', display: 'swap' });
+// Headings: Dela Gothic One, latin subset only, one weight.
+const display = localFont({
+  src: './fonts/dela-gothic-one-latin-400-normal.woff2',
+  weight: '400',
+  style: 'normal',
+  variable: '--font-display',
+  display: 'swap',
+  fallback: ['Arial Black', 'Impact', 'sans-serif'],
+});
 
-// Japanese display face, only used for the kanji accents.
-const zenAntique = Zen_Antique({ weight: '400', subsets: ['latin'], variable: '--font-antique', display: 'swap' });
+// Body: Figtree, a latin variable font — the whole 300–900 range is one file.
+const body = localFont({
+  src: './fonts/figtree-latin-wght-normal.woff2',
+  weight: '300 900',
+  style: 'normal',
+  variable: '--font-body',
+  display: 'swap',
+  fallback: ['system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+});
+
+const description =
+  'Software engineer in Colombo, Sri Lanka. I build websites and web apps with Next.js, Angular and Node.js.';
 
 export const metadata: Metadata = {
-  title: 'Chathuranga L Jayawardhana — Software Engineer',
-  description: 'Crafting scalable web platforms with Next.js, Angular & Node.js. Colombo, Sri Lanka.',
+  title: 'Chathuranga L Jayawardhana, Software Engineer',
+  description,
   openGraph: {
-    title: 'Chathuranga L Jayawardhana — Software Engineer',
-    description: 'Crafting scalable web platforms with Next.js, Angular & Node.js.',
+    title: 'Chathuranga L Jayawardhana, Software Engineer',
+    description,
     type: 'website',
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${anton.variable} ${bangers.variable} ${body.variable} ${zenAntique.variable}`}>
-      <body style={{ fontFamily: 'var(--font-zen), sans-serif' }}>{children}</body>
+    <html lang="en" className={`${display.variable} ${body.variable}`}>
+      <body style={{ fontFamily: 'var(--font-body), system-ui, sans-serif' }}>{children}</body>
     </html>
   );
 }
