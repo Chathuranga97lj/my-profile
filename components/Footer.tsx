@@ -2,8 +2,9 @@
 
 import type { CSSProperties } from 'react';
 import { ArrowUp } from '@/components/icons';
+import { WhatsAppLogo } from '@/components/logos';
 import { scrollToTop } from '@/components/ui';
-import { INK, PAPER, SPOT } from '@/lib/data';
+import { INK, LINKS, PAPER, SPOT, WHATSAPP_GREEN } from '@/lib/data';
 
 export default function Footer() {
   return (
@@ -45,7 +46,49 @@ export default function Footer() {
   );
 }
 
-/** Floating button that appears once you're past the hero. */
+/** Gap between the floating buttons and the corner of the screen. */
+const FAB_EDGE = 'clamp(14px, 3vw, 28px)';
+const FAB_SIZE = 54;
+
+/**
+ * Floating WhatsApp chat button, always in the bottom corner. It pops in after
+ * the hero has finished its entrance, so it doesn't compete with it.
+ */
+export function WhatsAppButton() {
+  return (
+    <a
+      href={LINKS.whatsappLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fab btn"
+      aria-label="Chat with me on WhatsApp (opens in a new tab)"
+      title="Chat on WhatsApp"
+      style={
+        {
+          position: 'fixed',
+          right: FAB_EDGE,
+          bottom: FAB_EDGE,
+          zIndex: 45,
+          width: FAB_SIZE,
+          height: FAB_SIZE,
+          display: 'grid',
+          placeItems: 'center',
+          background: WHATSAPP_GREEN,
+          color: PAPER,
+          border: `3px solid ${INK}`,
+          borderRadius: '50%',
+          boxShadow: `4px 4px 0 ${INK}`,
+          '--hover-shadow': `7px 7px 0 ${INK}`,
+          animationDelay: '1.4s',
+        } as CSSProperties
+      }
+    >
+      <WhatsAppLogo size={26} />
+    </a>
+  );
+}
+
+/** Floating button that appears once you're past the hero, stacked above the WhatsApp one. */
 export function BackToTop() {
   return (
     <button
@@ -56,11 +99,11 @@ export function BackToTop() {
       style={
         {
           position: 'fixed',
-          right: 'clamp(14px, 3vw, 28px)',
-          bottom: 'clamp(14px, 3vw, 28px)',
+          right: FAB_EDGE,
+          bottom: `calc(${FAB_EDGE} + ${FAB_SIZE + 14}px)`,
           zIndex: 45,
-          width: 54,
-          height: 54,
+          width: FAB_SIZE,
+          height: FAB_SIZE,
           display: 'grid',
           placeItems: 'center',
           background: INK,

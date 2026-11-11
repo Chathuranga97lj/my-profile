@@ -9,7 +9,7 @@ import Experience from '@/components/Experience';
 import Certificates from '@/components/Certificates';
 import HowIWork from '@/components/HowIWork';
 import Contact from '@/components/Contact';
-import Footer, { BackToTop } from '@/components/Footer';
+import Footer, { BackToTop, WhatsAppButton } from '@/components/Footer';
 import { useReveal } from '@/components/useReveal';
 import { useScrollEffects } from '@/components/useScrollEffects';
 import { PROJECTS, PROJECTS_SHOWN, type ProjectFilter } from '@/lib/data';
@@ -66,6 +66,7 @@ export default function Page() {
         <Contact />
       </main>
       <Footer />
+      <WhatsAppButton />
       {showTop && <BackToTop />}
     </div>
   );

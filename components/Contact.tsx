@@ -2,8 +2,9 @@
 
 import { useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import { ArrowUpRight } from '@/components/icons';
+import { WhatsAppLogo } from '@/components/logos';
 import { extLinkStyle } from '@/components/ui';
-import { DISPLAY_FONT, INK, LINKS, MUTED, PAPER, SPOT } from '@/lib/data';
+import { DISPLAY_FONT, INK, LINKS, MUTED, PAPER, SPOT, WHATSAPP_GREEN } from '@/lib/data';
 
 const colomboClock = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Colombo', hour: 'numeric', minute: '2-digit' });
 
@@ -130,7 +131,7 @@ export default function Contact() {
               className="reveal"
               style={{ '--d': '100ms', marginTop: 20, maxWidth: '30em', color: '#D4D4D4', fontSize: 19, lineHeight: 1.6 } as CSSProperties}
             >
-              I’m open to new projects and collaborations. Email is the fastest way to reach me.
+              I’m open to new projects and collaborations. Email or WhatsApp me, whichever is easier for you.
             </p>
             {time && (
               <p
@@ -209,9 +210,44 @@ export default function Contact() {
                 {copied === 'fail' && 'Couldn’t copy. Select the address above instead.'}
               </p>
 
+              <div style={{ marginTop: 6, paddingTop: 18, borderTop: `3px solid ${INK}` }}>
+                <p style={{ color: MUTED, fontSize: 15, fontWeight: 700 }}>WhatsApp</p>
+                <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px 20px' }}>
+                  {/* Ink text, not white: white on WhatsApp green is too faint to read. */}
+                  <a
+                    href={LINKS.whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn"
+                    style={
+                      { ...button, gap: 10, background: WHATSAPP_GREEN, color: INK, '--hover-shadow': `8px 8px 0 ${INK}` } as CSSProperties
+                    }
+                  >
+                    <WhatsAppLogo size={20} />
+                    <span>Chat on WhatsApp</span>
+                    <span className="sr-only">(opens in a new tab)</span>
+                  </a>
+                  <a
+                    href={`tel:${LINKS.whatsappLink.replace('https://wa.me/', '+')}`}
+                    style={{
+                      color: INK,
+                      fontSize: 19,
+                      fontWeight: 900,
+                      textDecoration: 'underline',
+                      textDecorationColor: WHATSAPP_GREEN,
+                      textDecorationThickness: 3,
+                      textUnderlineOffset: 5,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {LINKS.whatsapp}
+                  </a>
+                </div>
+              </div>
+
               <div
                 style={{
-                  marginTop: 6,
+                  marginTop: 22,
                   paddingTop: 18,
                   borderTop: `3px solid ${INK}`,
                   display: 'flex',

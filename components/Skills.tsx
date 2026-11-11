@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties } from 'react';
 import { ArrowDown } from '@/components/icons';
-import { ToolLogo } from '@/components/logos';
+import { LOGO_COLORS, ToolLogo } from '@/components/logos';
 import { SectionHeading, TailLeft, sectionStyle } from '@/components/ui';
 import { BODY, DISPLAY_FONT, INK, MUTED, PAPER, PROJECTS, SKILL_GROUPS, SPOT, TEXT, TOOL_INFO, YELLOW } from '@/lib/data';
 
@@ -75,7 +75,8 @@ export default function Skills({ onJump }: { onJump: (projectId: string) => void
                               cursor: 'pointer',
                             }}
                           >
-                            <ToolLogo name={name} />
+                            {/* Brand colour at rest; white on the blue fill once picked. */}
+                            <ToolLogo name={name} color={on ? PAPER : LOGO_COLORS[name]} />
                             <span>{name}</span>
                           </button>
                         </li>
@@ -163,7 +164,7 @@ function ToolDetail({ tool, onJump, compact = false }: { tool: string; onJump: (
           lineHeight: 1.1,
         }}
       >
-        <ToolLogo name={tool} size={compact ? 26 : 36} />
+        <ToolLogo name={tool} size={compact ? 26 : 36} color={LOGO_COLORS[tool]} />
         <span>{tool}</span>
       </Heading>
       <p style={{ marginTop: compact ? 10 : 12, color: TEXT, fontSize: compact ? 17 : 18, lineHeight: 1.55 }}>{TOOL_INFO[tool]}</p>

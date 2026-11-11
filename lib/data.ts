@@ -18,6 +18,8 @@ export const SPOT_SOFT = '#9AA8FF';
 export const YELLOW = '#F4EBC1';
 export const BLUE = '#D6E6F2';
 export const PINK = '#F5D9DD';
+/** WhatsApp's brand green, for the WhatsApp buttons only. */
+export const WHATSAPP_GREEN = '#25D366';
 
 export const DISPLAY_FONT = "var(--font-display), 'Arial Black', Impact, sans-serif";
 
@@ -25,6 +27,9 @@ export const LINKS = {
   github: 'https://github.com/Chathuranga97lj',
   linkedin: 'https://www.linkedin.com/in/chathuranga97',
   email: 'chathuit97@gmail.com',
+  /** Shown as written; the link uses the international form (Sri Lanka, +94). */
+  whatsapp: '076 871 1780',
+  whatsappLink: 'https://wa.me/94768711780',
 };
 
 export const NAV = [
