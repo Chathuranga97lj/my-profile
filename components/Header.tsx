@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties } from 'react';
 import { MenuIcon } from '@/components/icons';
-import { BODY, DISPLAY_FONT, INK, NAV, PAPER, SPOT } from '@/lib/data';
+import { BODY, DISPLAY_FONT, INK, MUTED, NAV, PAPER, SPOT, SPOT_SOFT } from '@/lib/data';
 
 /**
  * Sticky top bar. Gains a bottom rule once the page scrolls, underlines the
@@ -38,27 +38,43 @@ export default function Header({ scrolled, active }: { scrolled: boolean; active
         <a
           href="#top"
           className="logo"
-          aria-label="Chathuranga L Jayawardhana, back to top"
-          style={{ display: 'flex', alignItems: 'center', gap: 12, color: INK, textDecoration: 'none' }}
+          aria-label="Chathuranga Jayawardhana, back to top"
+          style={{ display: 'flex', alignItems: 'center', gap: 16, color: INK, textDecoration: 'none' }}
         >
+          {/* The CJ monogram written as a self-closing tag, inside an inked stamp:
+              a white gap, a thin ink ring, then the blue offset shadow. */}
           <span
             className="logo-mark"
             aria-hidden="true"
             style={{
-              display: 'grid',
-              placeItems: 'center',
-              width: 44,
-              height: 44,
+              flex: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 52,
+              height: 52,
               borderRadius: '50%',
               background: INK,
               color: PAPER,
-              fontFamily: DISPLAY_FONT,
-              fontSize: 16,
+              boxShadow: `0 0 0 2px ${PAPER}, 0 0 0 4px ${INK}, 4px 4px 0 4px ${SPOT}`,
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
             }}
           >
-            CJ
+            <span className="logo-lt" style={{ color: SPOT_SOFT, fontWeight: 900, fontSize: 11 }}>
+              &lt;
+            </span>
+            <span style={{ margin: '0 1px', fontFamily: DISPLAY_FONT, fontSize: 14, letterSpacing: '-0.02em' }}>CJ</span>
+            <span className="logo-gt" style={{ color: SPOT_SOFT, fontWeight: 900, fontSize: 11 }}>
+              /&gt;
+            </span>
           </span>
-          <span style={{ fontWeight: 900, fontSize: 17, letterSpacing: '-0.01em' }}>Chathuranga</span>
+          <span style={{ display: 'grid', gap: 3 }}>
+            <span style={{ fontFamily: DISPLAY_FONT, fontSize: 17, lineHeight: 1.1 }}>Chathuranga</span>
+            <span style={{ color: MUTED, fontSize: 12.5, fontWeight: 700, lineHeight: 1.1, letterSpacing: '.02em' }}>
+              Software engineer
+            </span>
+          </span>
         </a>
 
         <ul className="nav-links" style={{ listStyle: 'none', margin: 0, padding: 0, alignItems: 'center', gap: 2 }}>

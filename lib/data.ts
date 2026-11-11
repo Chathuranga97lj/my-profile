@@ -50,9 +50,10 @@ export const SECTION_SPY: ReadonlyArray<readonly [string, string]> = [
   ['contact', 'contact'],
 ];
 
-export const NAME_LINES = ['Chathuranga', 'L Jayawardhana'];
-/** Line index → letter index drawn in the accent colour, so the name spells out the CJ monogram. */
-export const CJ_LETTERS: Record<number, number> = { 0: 0, 1: 2 };
+/** Each line opens on a monogram letter. */
+export const NAME_LINES = ['Chathuranga', 'Jayawardhana'];
+/** Line index → letter index drawn large in the accent colour, so the name spells out the CJ monogram. */
+export const CJ_LETTERS: Record<number, number> = { 0: 0, 1: 0 };
 
 export const FACTS = [
   { label: 'Works at', value: 'Efito Solutions, since 2023' },

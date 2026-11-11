@@ -55,7 +55,8 @@ hover states: `.btn` elements set their resting shadow inline *and* a
 swap it in.
 
 The hero name is sized by `.hero-name` with container-query units against its
-own column, so "L Jayawardhana" never wraps mid-word. Don't give it an inline
+own column, so neither line ("Chathuranga" / "Jayawardhana", with a 1.5em C
+and J) ever wraps mid-word; the comment on `.hero-name` has the measured widths. Don't give it an inline
 `fontSize`.
 
 Card grids use `minmax(min(<floor>px, 100%), 1fr)`. The `min()` is what stops

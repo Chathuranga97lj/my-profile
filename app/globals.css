@@ -107,12 +107,14 @@ button { font-family: inherit; }
   .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 76px; }
 }
 
-/* The name is sized against its own column so "L Jayawardhana" never wraps
-   mid-word: the line is 9.9em wide in the display face. */
+/* The name is sized against its own column so a line never wraps mid-word.
+   Measured in the display face, with the 1.5em C and J below, "Chathuranga"
+   is 8.25em wide and "Jayawardhana" 9.31em; 10cqi keeps both inside the
+   column with room for the offset shadow. Re-measure if either changes. */
 .hero-copy { container-type: inline-size; }
 .hero-name { font-size: clamp(26px, 5vw, 64px); }
 @supports (font-size: 1cqi) {
-  .hero-name { font-size: clamp(26px, 9.6cqi, 84px); }
+  .hero-name { font-size: clamp(26px, 10cqi, 84px); }
 }
 
 .skills-layout {
@@ -160,8 +162,12 @@ button { font-family: inherit; }
 .nav-underline { transition: transform .3s cubic-bezier(.2, .8, .2, 1); }
 .nav-link:hover .nav-underline { transform: scaleX(1) !important; }
 
+/* Nav monogram: the badge tilts and the < and /> spread apart, like the tag opening. */
 .logo-mark { transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
-.logo:hover .logo-mark { transform: rotate(-14deg) scale(1.08); }
+.logo-lt, .logo-gt { display: inline-block; transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
+.logo:hover .logo-mark, .logo:focus-visible .logo-mark { transform: rotate(-10deg) scale(1.06); }
+.logo:hover .logo-lt, .logo:focus-visible .logo-lt { transform: translateX(-2px); }
+.logo:hover .logo-gt, .logo:focus-visible .logo-gt { transform: translateX(2px); }
 
 .ext svg, .jump svg { flex: none; transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
 .ext:hover svg { transform: translate(3px, -3px); }
@@ -177,8 +183,12 @@ button { font-family: inherit; }
 .letter { display: inline-block; animation: letterIn .75s cubic-bezier(.2, .9, .3, 1.2) both; }
 .letter-inner { display: inline-block; transition: transform .35s cubic-bezier(.34, 1.56, .64, 1), color .15s; }
 .letter:hover .letter-inner { transform: translateY(-.12em) rotate(-6deg); color: var(--spot); }
-/* C and J spell out the CJ monogram, and bounce once after the name lands */
+/* C and J open each line at 1.5× size, spell out the CJ monogram, and bounce
+   once after the name lands. line-height .9 keeps the line gap tight: the J's
+   cap top still clears line one's baseline by about a third of an em. */
 .cj {
+  font-size: 1.5em;
+  line-height: .9;
   color: var(--spot);
   text-shadow: .06em .06em 0 var(--ink);
   animation: cjBounce 1s cubic-bezier(.34, 1.56, .64, 1) 1.35s backwards;

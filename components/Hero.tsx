@@ -106,7 +106,7 @@ export default function Hero() {
                 letterSpacing: '-0.005em',
               }}
             >
-              <span className="sr-only">Chathuranga L Jayawardhana</span>
+              <span className="sr-only">Chathuranga Jayawardhana</span>
               {NAME_LINES.map((line, li) => (
                 <span key={line} aria-hidden="true" style={{ display: 'block', whiteSpace: 'nowrap' }}>
                   {Array.from(line).map((ch, i) => (
