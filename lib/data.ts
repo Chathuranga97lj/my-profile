@@ -195,7 +195,11 @@ export const PROJECTS: Project[] = [
   },
 ];
 
-export const PROJECT_FILTERS: { key: ProjectFilter; label: string }[] = [
+/** Cards shown before "See more": one row of projects, two rows of certificates on desktop. */
+export const PROJECTS_SHOWN = 3;
+export const CERTS_SHOWN = 6;
+
+export const PROJECT_FILTERS:{ key: ProjectFilter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'web', label: 'Websites' },
   { key: 'mobile', label: 'Mobile apps' },

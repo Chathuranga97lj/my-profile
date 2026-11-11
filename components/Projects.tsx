@@ -3,17 +3,28 @@
 import type { CSSProperties } from 'react';
 import { ArrowUpRight } from '@/components/icons';
 import { ToolLogo } from '@/components/logos';
-import { FilterButtons, SectionHeading, extLinkStyle, sectionStyle } from '@/components/ui';
-import { BODY, DISPLAY_FONT, INK, MUTED, PAPER, PROJECT_FILTERS, PROJECTS, SPOT, YELLOW, type ProjectFilter } from '@/lib/data';
+import { FilterButtons, SectionHeading, SeeMoreButton, extLinkStyle, sectionStyle } from '@/components/ui';
+import { BODY, DISPLAY_FONT, INK, MUTED, PAPER, PROJECT_FILTERS, PROJECTS, PROJECTS_SHOWN, SPOT, YELLOW, type ProjectFilter } from '@/lib/data';
 
 /**
  * Project cards with a screentone cover. The filter lives in the page so the
  * skills panel can reset it before jumping to a card. Cards are keyed by the
  * filter, so changing it remounts them and they ink in again.
  */
-export default function Projects({ filter, onFilter }: { filter: ProjectFilter; onFilter: (filter: ProjectFilter) => void }) {
+export default function Projects({
+  filter,
+  onFilter,
+  open,
+  onOpen,
+}: {
+  filter: ProjectFilter;
+  onFilter: (filter: ProjectFilter) => void;
+  open: boolean;
+  onOpen: (open: boolean) => void;
+}) {
   const count = (key: ProjectFilter) => (key === 'all' ? PROJECTS.length : PROJECTS.filter((p) => p.kind === key).length);
-  const visible = filter === 'all' ? PROJECTS : PROJECTS.filter((p) => p.kind === filter);
+  const matching = filter === 'all' ? PROJECTS : PROJECTS.filter((p) => p.kind === filter);
+  const visible = open ? matching : matching.slice(0, PROJECTS_SHOWN);
 
   return (
     <section id="projects" aria-labelledby="projects-title" style={sectionStyle(PAPER)}>
@@ -31,6 +42,7 @@ export default function Projects({ filter, onFilter }: { filter: ProjectFilter; 
         </div>
 
         <div
+          id="projects-list"
           style={{
             marginTop: 44,
             display: 'grid',
@@ -39,7 +51,7 @@ export default function Projects({ filter, onFilter }: { filter: ProjectFilter; 
           }}
         >
           {visible.map((p, i) => (
-            <div key={`${filter}-${p.id}`} className="reveal" style={{ '--d': `${i * 110}ms` } as CSSProperties}>
+            <div key={`${filter}-${p.id}`} className="reveal" style={{ '--d': `${(i % PROJECTS_SHOWN) * 110}ms` } as CSSProperties}>
               <article
                 id={`project-${p.id}`}
                 className="project-card"
@@ -155,6 +167,17 @@ export default function Projects({ filter, onFilter }: { filter: ProjectFilter; 
             </div>
           ))}
         </div>
+
+        {matching.length > PROJECTS_SHOWN && (
+          <SeeMoreButton
+            open={open}
+            hidden={matching.length - PROJECTS_SHOWN}
+            noun="projects"
+            controls="projects-list"
+            section="projects"
+            onToggle={onOpen}
+          />
+        )}
       </div>
     </section>
   );

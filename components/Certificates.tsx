@@ -2,16 +2,24 @@
 
 import { useState, type CSSProperties } from 'react';
 import { ArrowUpRight } from '@/components/icons';
-import { FilterButtons, SectionHeading, extLinkStyle, sectionStyle } from '@/components/ui';
-import { CERT_TOPICS, CERTS, DISPLAY_FONT, INK, MUTED, PAPER, SPOT, type CertFilter, type CertTopic } from '@/lib/data';
+import { FilterButtons, SectionHeading, SeeMoreButton, extLinkStyle, sectionStyle } from '@/components/ui';
+import { CERT_TOPICS, CERTS, CERTS_SHOWN, DISPLAY_FONT, INK, MUTED, PAPER, SPOT, type CertFilter, type CertTopic } from '@/lib/data';
 
 const topicOf = (key: CertTopic) => CERT_TOPICS.find((t) => t.key === key);
 
 /** Licenses and certifications, filterable by topic. Each card's year seal stamps down on hover. */
 export default function Certificates() {
   const [topic, setTopic] = useState<CertFilter>('all');
+  const [open, setOpen] = useState(false);
   const count = (key: CertFilter) => (key === 'all' ? CERTS.length : CERTS.filter((c) => c.topic === key).length);
-  const visible = topic === 'all' ? CERTS : CERTS.filter((c) => c.topic === topic);
+  const matching = topic === 'all' ? CERTS : CERTS.filter((c) => c.topic === topic);
+  const visible = open ? matching : matching.slice(0, CERTS_SHOWN);
+
+  // A new filter starts collapsed again.
+  const changeTopic = (key: CertFilter) => {
+    setTopic(key);
+    setOpen(false);
+  };
 
   return (
     <section id="certificates" aria-labelledby="certificates-title" style={sectionStyle(PAPER)}>
@@ -28,12 +36,13 @@ export default function Certificates() {
               label="Filter certificates"
               options={CERT_TOPICS.map((t) => ({ key: t.key, label: t.label, count: count(t.key) }))}
               value={topic}
-              onChange={setTopic}
+              onChange={changeTopic}
             />
           </div>
         </div>
 
         <ul
+          id="certificates-list"
           style={{
             listStyle: 'none',
             margin: '48px 0 0',
@@ -46,7 +55,7 @@ export default function Certificates() {
           {visible.map((c, i) => {
             const t = topicOf(c.topic);
             return (
-              <li key={`${topic}-${c.id}`} className="reveal" style={{ '--d': `${Math.min(i, 5) * 80}ms` } as CSSProperties}>
+              <li key={`${topic}-${c.id}`} className="reveal" style={{ '--d': `${(i % CERTS_SHOWN) * 80}ms` } as CSSProperties}>
                 <article
                   className="cert-card"
                   style={{
@@ -116,6 +125,17 @@ export default function Certificates() {
             );
           })}
         </ul>
+
+        {matching.length > CERTS_SHOWN && (
+          <SeeMoreButton
+            open={open}
+            hidden={matching.length - CERTS_SHOWN}
+            noun="certificates"
+            controls="certificates-list"
+            section="certificates"
+            onToggle={setOpen}
+          />
+        )}
       </div>
     </section>
   );

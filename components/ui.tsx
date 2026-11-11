@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { ArrowDown, ArrowUp } from '@/components/icons';
 import { BODY, DISPLAY_FONT, INK, PAPER, SPOT } from '@/lib/data';
 
 /** Every section after the hero: a page of its own, with an ink rule across the top. */
@@ -152,6 +153,68 @@ export function TailLeft({ top }: { top: number }) {
       <path d="M6 2 L0 2 L-26 15 L0 28 L6 28 Z" fill={PAPER} />
       <path d="M2 3 L-26 15 L2 27" fill="none" stroke={INK} strokeWidth={4} strokeLinejoin="round" />
     </svg>
+  );
+}
+
+/**
+ * "See N more …" under a card grid that only shows its first few cards.
+ * Collapsing scrolls back to the section, so the reader isn't left stranded
+ * far below a list that just got shorter.
+ */
+export function SeeMoreButton({
+  open,
+  hidden,
+  noun,
+  controls,
+  section,
+  onToggle,
+}: {
+  open: boolean;
+  /** How many cards are hidden while collapsed. */
+  hidden: number;
+  /** Plural, e.g. "projects". */
+  noun: string;
+  /** id of the list this button opens. */
+  controls: string;
+  /** id of the section to scroll back to on collapse. */
+  section: string;
+  onToggle: (open: boolean) => void;
+}) {
+  const toggle = () => {
+    onToggle(!open);
+    if (open) document.getElementById(section)?.scrollIntoView({ block: 'start' });
+  };
+
+  return (
+    <div style={{ marginTop: 44, display: 'flex', justifyContent: 'center' }}>
+      <button
+        type="button"
+        className={open ? 'btn' : 'btn jump'}
+        aria-expanded={open}
+        aria-controls={controls}
+        onClick={toggle}
+        style={
+          {
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '13px 22px',
+            background: open ? PAPER : INK,
+            color: open ? INK : PAPER,
+            border: `3px solid ${INK}`,
+            boxShadow: `4px 4px 0 ${SPOT}`,
+            '--hover-shadow': `7px 7px 0 ${SPOT}`,
+            fontWeight: 900,
+            fontSize: 16.5,
+            lineHeight: 1.2,
+            cursor: 'pointer',
+          } as CSSProperties
+        }
+      >
+        <span>{open ? `Show fewer ${noun}` : `See ${hidden} more ${noun}`}</span>
+        {open ? <ArrowUp /> : <ArrowDown />}
+      </button>
+    </div>
   );
 }
 

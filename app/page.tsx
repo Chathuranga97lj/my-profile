@@ -12,17 +12,26 @@ import Contact from '@/components/Contact';
 import Footer, { BackToTop } from '@/components/Footer';
 import { useReveal } from '@/components/useReveal';
 import { useScrollEffects } from '@/components/useScrollEffects';
-import type { ProjectFilter } from '@/lib/data';
+import { PROJECTS, PROJECTS_SHOWN, type ProjectFilter } from '@/lib/data';
 
 export default function Page() {
   const { scrolled, active, showTop } = useScrollEffects();
   useReveal();
 
-  // Lives here, not in Projects, so the skills panel can clear it before jumping to a card.
+  // Live here, not in Projects, so the skills panel can clear the filter and
+  // open the full list before jumping to a card that might be hidden.
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('all');
+  const [projectsOpen, setProjectsOpen] = useState(false);
+
+  // A new filter starts collapsed again.
+  const filterProjects = useCallback((filter: ProjectFilter) => {
+    setProjectFilter(filter);
+    setProjectsOpen(false);
+  }, []);
 
   const jumpToProject = useCallback((id: string) => {
     setProjectFilter('all');
+    if (PROJECTS.findIndex((p) => p.id === id) >= PROJECTS_SHOWN) setProjectsOpen(true);
     // Let the unfiltered cards mount before scrolling to one.
     window.setTimeout(() => {
       const card = document.getElementById(`project-${id}`);
@@ -50,7 +59,7 @@ export default function Page() {
       <main id="main">
         <Hero />
         <Skills onJump={jumpToProject} />
-        <Projects filter={projectFilter} onFilter={setProjectFilter} />
+        <Projects filter={projectFilter} onFilter={filterProjects} open={projectsOpen} onOpen={setProjectsOpen} />
         <Experience />
         <Certificates />
         <HowIWork />
