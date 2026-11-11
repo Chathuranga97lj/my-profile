@@ -1,39 +1,47 @@
 'use client';
 
 import { useState } from 'react';
-import { FILTERS, INK, PAPER, PROJECTS, SKY, type FilterKey } from '@/lib/data';
+import { FILTERS, INK, INK_45, INK_70, ORANGE_INK, PAPER, PROJECTS, SKY, type FilterKey } from '@/lib/data';
 
 export default function Projects() {
   const [filter, setFilter] = useState<FilterKey>('all');
-  const bangers = { fontFamily: 'var(--font-bangers), cursive' } as const;
 
   const visible = filter === 'all' ? PROJECTS : PROJECTS.filter((p) => p.filterKey === filter);
 
   return (
-    <section id="projects" className="manga-page" style={{ maxWidth: 1320, margin: '0 auto 28px', padding: 'clamp(16px, 3vw, 26px)' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', marginBottom: 24 }}>
-        <div data-reveal="slam" style={{ display: 'flex', alignItems: 'baseline', gap: 'clamp(10px, 2vw, 16px)', flexWrap: 'wrap' }}>
-          <h2 style={{ fontFamily: 'var(--font-anton), sans-serif', fontSize: 'clamp(30px, 7vw, 44px)', margin: 0, textTransform: 'uppercase', color: INK, letterSpacing: -0.5, textShadow: `4px 4px 0 ${SKY}` }}>
+    <section id="projects" className="panel" style={{ padding: 'clamp(18px, 3.4vw, 30px)' }}>
+      <div className="section-head">
+        <div
+          data-reveal="pop"
+          style={{ display: 'flex', alignItems: 'baseline', gap: 'clamp(10px, 2vw, 14px)', flexWrap: 'wrap' }}
+        >
+          <h2 className="t-section" style={{ color: INK, textShadow: `3px 3px 0 ${SKY}` }}>
             Mission Log
           </h2>
-          <span style={{ fontFamily: 'var(--font-antique), serif', fontSize: 'clamp(16px, 3.6vw, 20px)', color: '#B91C1C' }}>任務記録</span>
+          <span className="t-kanji" style={{ fontSize: 'clamp(15px, 3.2vw, 19px)', color: INK_45 }}>
+            任務記録
+          </span>
         </div>
-        <div data-reveal="right" className="filter-bar">
-          {FILTERS.map((f) => (
+
+        <div data-reveal="right" className="filter-bar" role="group" aria-label="Filter missions">
+          {FILTERS.map((f, i) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
+              aria-pressed={filter === f.key}
+              className="pressable"
               style={{
                 border: 'none',
-                borderRight: `3px solid ${INK}`,
-                padding: '10px clamp(12px, 3vw, 16px)',
-                ...bangers,
-                fontSize: 'clamp(15px, 3.6vw, 17px)',
-                letterSpacing: 1.5,
+                borderLeft: i === 0 ? 'none' : `2px solid ${INK}`,
+                padding: '9px clamp(12px, 2.6vw, 16px)',
+                fontFamily: 'inherit',
+                fontWeight: 800,
+                fontSize: 12,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
                 cursor: 'pointer',
                 background: filter === f.key ? INK : PAPER,
-                color: filter === f.key ? '#F97316' : INK,
-                transition: 'all .15s',
+                color: filter === f.key ? 'var(--paper)' : INK,
               }}
             >
               {f.label}
@@ -42,34 +50,135 @@ export default function Projects() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(330px, 100%), 1fr))', gap: 20 }}>
+      <div className="grid-cards">
         {visible.map((proj, i) => (
-          <article key={proj.name} className="card-manga" data-reveal="up" data-delay={i * 120} style={{ border: `4px solid ${INK}`, background: PAPER }}>
-            <div style={{ position: 'relative', height: 150, borderBottom: `4px solid ${INK}`, background: 'repeating-conic-gradient(from 0deg at 50% 50%, #14110F 0deg 0.9deg, transparent 0.9deg 7deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              <span style={{ ...bangers, fontSize: 'clamp(26px, 7vw, 34px)', letterSpacing: 3, color: INK, background: PAPER, border: `3px solid ${INK}`, padding: '2px 16px', animation: 'sfxJitter 3s ease-in-out infinite' }}>
+          <article
+            key={proj.name}
+            className="card"
+            data-reveal="up"
+            data-delay={i * 70}
+            style={{ display: 'flex', flexDirection: 'column' }}
+          >
+            <div
+              style={{
+                position: 'relative',
+                height: 132,
+                borderBottom: `2px solid ${INK}`,
+                background:
+                  'repeating-conic-gradient(from 0deg at 50% 50%, var(--ink) 0deg 0.9deg, transparent 0.9deg 7deg)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}
+            >
+              <span
+                className="t-sfx"
+                style={{
+                  fontSize: 'clamp(24px, 6vw, 31px)',
+                  color: INK,
+                  background: PAPER,
+                  border: `2px solid ${INK}`,
+                  padding: '2px 15px',
+                  transform: 'rotate(-3deg)',
+                }}
+              >
                 {proj.sfx}
               </span>
-              <span style={{ position: 'absolute', top: 10, left: 10, background: proj.rankBg, color: proj.rankFg, border: `3px solid ${INK}`, ...bangers, fontSize: 16, letterSpacing: 1.5, padding: '2px 10px' }}>
+              <span
+                className="t-sfx"
+                style={{
+                  position: 'absolute',
+                  top: 9,
+                  left: 9,
+                  background: proj.rankBg,
+                  color: proj.rankFg,
+                  border: `2px solid ${INK}`,
+                  fontSize: 14,
+                  padding: '1px 9px',
+                }}
+              >
                 {proj.rank}
               </span>
             </div>
-            <div style={{ padding: 'clamp(16px, 3vw, 20px)' }}>
-              <h3 style={{ fontFamily: 'var(--font-anton), sans-serif', fontSize: 'clamp(21px, 5vw, 24px)', margin: '0 0 4px', textTransform: 'uppercase', color: INK }}>{proj.name}</h3>
-              <div style={{ fontWeight: 900, fontSize: 12, letterSpacing: 2, color: '#E8590C', textTransform: 'uppercase', marginBottom: 10 }}>{proj.category}</div>
-              <p style={{ margin: '0 0 16px', fontSize: 14.5, fontWeight: 500, lineHeight: 1.55, color: '#4A443C', minHeight: 66 }}>{proj.desc}</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 16 }}>
-                {proj.tech.map((t) => (
-                  <span key={t} style={{ border: `2px solid ${INK}`, background: '#EDE6D6', fontFamily: 'ui-monospace, monospace', fontSize: 11.5, fontWeight: 700, padding: '4px 9px', color: INK }}>{t}</span>
-                ))}
+
+            <div
+              style={{
+                padding: 'clamp(16px, 2.8vw, 20px)',
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+              }}
+            >
+              <h3
+                className="t-display"
+                style={{ fontSize: 'clamp(19px, 4vw, 22px)', margin: 0, color: INK }}
+              >
+                {proj.name}
+              </h3>
+              <div className="t-label" style={{ color: ORANGE_INK, margin: '6px 0 10px' }}>
+                {proj.category}
               </div>
-              <div style={{ borderTop: `3px solid ${INK}`, paddingTop: 14, display: 'flex', gap: 18, ...bangers, fontSize: 17, letterSpacing: 1.5 }}>
-                <a href={proj.link} target="_blank" rel="noopener noreferrer" style={{ color: '#E8590C' }}>VIEW LIVE ↗</a>
-                <span style={{ color: '#8A8377' }}>{proj.year}</span>
+
+              {/* flex:1 rather than the old min-height guess — the cards line
+                  up because the column stretches, not because 66px happened to
+                  fit the longest description at one particular width */}
+              <p className="t-body" style={{ margin: '0 0 16px', flex: 1, fontSize: 14 }}>
+                {proj.desc}
+              </p>
+
+              <ul
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 6,
+                  margin: '0 0 15px',
+                  padding: 0,
+                  listStyle: 'none',
+                }}
+              >
+                {proj.tech.map((t) => (
+                  <li
+                    key={t}
+                    className="chip t-mono"
+                    style={{ fontSize: 11, padding: '3px 8px' }}
+                  >
+                    {t}
+                  </li>
+                ))}
+              </ul>
+
+              <div
+                style={{
+                  borderTop: `2px solid ${INK}`,
+                  paddingTop: 13,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 14,
+                }}
+              >
+                <a
+                  className="link t-label"
+                  href={proj.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`View ${proj.name} live`}
+                >
+                  View live ↗
+                </a>
+                <span className="t-label" style={{ color: INK_45 }}>
+                  {proj.year}
+                </span>
               </div>
             </div>
           </article>
         ))}
       </div>
+
+      <p className="t-body" style={{ margin: '16px 0 0', fontSize: 12.5, color: INK_70 }} aria-live="polite">
+        {visible.length} {visible.length === 1 ? 'mission' : 'missions'} shown
+      </p>
     </section>
   );
 }

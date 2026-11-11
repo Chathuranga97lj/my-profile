@@ -1,22 +1,51 @@
-export const INK = '#14110F';
-export const PAPER = '#F7F2E5';
-export const PAPER_DARK = '#EDE6D6';
-export const ORANGE = '#F97316';
-export const ORANGE_DEEP = '#E8590C';
-export const RED = '#B91C1C';
-export const SKY = '#38BDF8';
-export const MUTED = '#4A443C';
+/* ---------------------------------------------------------------------------
+   Colour is NOT defined here any more.
+
+   These are references to the CSS custom properties in `app/globals.css`, so a
+   component writing `color: INK` emits `color: var(--ink)` and follows the
+   active theme automatically. Changing a colour is now a one-file edit, and
+   dark mode needs no component changes at all.
+
+   Read the names as roles: `INK` is "the line work and the inverted surface" —
+   in the dark theme it is bone, not black.
+--------------------------------------------------------------------------- */
+
+export const INK = 'var(--ink)';
+export const PAPER = 'var(--paper)';
+export const GROUND = 'var(--ground)';
+export const CHIP = 'var(--chip)';
+
+export const INK_70 = 'var(--ink-70)';
+export const INK_45 = 'var(--ink-45)';
+export const ON_INK = 'var(--on-ink)';
+export const ON_INK_70 = 'var(--on-ink-70)';
+export const ON_INK_45 = 'var(--on-ink-45)';
+
+/** Fill only — always carries FIXED_INK on top. */
+export const ORANGE = 'var(--accent)';
+/** The same hue, dark enough to be legible as text on paper. */
+export const ORANGE_INK = 'var(--accent-ink)';
+export const ORANGE_QUIET = 'var(--accent-quiet)';
+
+export const RED = 'var(--red)';
+export const SKY = 'var(--sky)';
+export const SKY_INK = 'var(--sky-ink)';
+export const TERM = 'var(--term)';
+
+/** Do not swap with the theme — for text on fills that keep their colour. */
+export const FIXED_INK = 'var(--fixed-ink)';
+export const FIXED_PAPER = 'var(--fixed-paper)';
 
 export type Sign = { sign: string; text: string };
 
+/**
+ * Three beats, not seven. The splash is now ~1.3s and skippable, so the
+ * sequence has to tell its whole story — boot, build, ship — in that budget.
+ */
 export const SEQUENCE: Sign[] = [
-  { sign: '巳 · Snake', text: 'booting kernel — linux up' },
-  { sign: '未 · Ram', text: 'npm install @konoha/next' },
-  { sign: '猿 · Monkey', text: 'compiling typescript…' },
-  { sign: '亥 · Boar', text: 'connecting mongodb + mysql' },
-  { sign: '馬 · Horse', text: 'go routines spawned 🐹' },
-  { sign: '寅 · Tiger', text: 'flutter build --release 📱' },
-  { sign: '解 · Kai', text: 'deploy complete — kuchiyose!' },
+  { sign: '巳 · Snake', text: 'booting kernel' },
+  { sign: '猿 · Monkey', text: 'compiling typescript' },
+  { sign: '解 · Kai', text: 'deploy complete' },
 ];
 
 export type FilterKey = 'all' | 'fullstack' | 'mobile' | 'backend';
@@ -36,7 +65,7 @@ export const STACK: StackGroup[] = [
     label: 'CORE JUTSU',
     desc: 'Daily kekkei genkai',
     tagBg: ORANGE,
-    tagFg: INK,
+    tagFg: FIXED_INK,
     delay: 0,
     techs: [
       { name: 'Next.js', key: 'fullstack' },
@@ -50,8 +79,8 @@ export const STACK: StackGroup[] = [
     label: 'TRAINING ARC',
     desc: 'Learning & growth',
     tagBg: SKY,
-    tagFg: INK,
-    delay: 120,
+    tagFg: FIXED_INK,
+    delay: 70,
     techs: [
       { name: 'Go 🐹', key: 'backend' },
       { name: 'Flutter 📱', key: 'mobile' },
@@ -62,7 +91,7 @@ export const STACK: StackGroup[] = [
     desc: 'Tools & infrastructure',
     tagBg: PAPER,
     tagFg: INK,
-    delay: 240,
+    delay: 140,
     techs: [
       { name: 'MySQL', key: 'backend' },
       { name: 'MongoDB', key: 'backend' },
@@ -93,7 +122,7 @@ export const PROJECTS: Project[] = [
     filterKey: 'fullstack',
     rank: 'S-RANK',
     rankBg: RED,
-    rankFg: PAPER,
+    rankFg: FIXED_PAPER,
     sfx: 'ドン！',
     year: '2025',
     desc: "Sri Lanka's first AI-powered matrimonial platform — matchmaking engine, secure profiles, built end to end.",
@@ -106,7 +135,7 @@ export const PROJECTS: Project[] = [
     filterKey: 'fullstack',
     rank: 'A-RANK',
     rankBg: ORANGE,
-    rankFg: INK,
+    rankFg: FIXED_INK,
     sfx: 'バン！',
     year: '2024',
     desc: 'Online platform connecting students and tutors worldwide through a simple, secure, interactive digital space.',
@@ -119,7 +148,7 @@ export const PROJECTS: Project[] = [
     filterKey: 'mobile',
     rank: 'B-RANK',
     rankBg: SKY,
-    rankFg: INK,
+    rankFg: FIXED_INK,
     sfx: 'ゴゴゴ',
     year: '2024',
     desc: 'Mobile app helping farmers manage livestock and coordinate directly with veterinarians in the field.',
@@ -141,10 +170,8 @@ export type TimelineEvent = {
   period: string;
   dot: string;
   body: string;
-  bg: string;
-  titleColor: string;
-  metaColor: string;
-  bodyColor: string;
+  /** The creed panel inverts — ink surface, light type. The other two don't. */
+  inverted?: boolean;
 };
 
 export const TIMELINE: TimelineEvent[] = [
@@ -154,10 +181,6 @@ export const TIMELINE: TimelineEvent[] = [
     period: 'CURRENT',
     dot: ORANGE,
     body: 'Building and shipping production web platforms across the stack — Next.js and Angular front ends on Node.js services, with MySQL and MongoDB behind them.',
-    bg: PAPER,
-    titleColor: INK,
-    metaColor: RED,
-    bodyColor: MUTED,
   },
   {
     title: 'THE ACADEMY',
@@ -165,10 +188,6 @@ export const TIMELINE: TimelineEvent[] = [
     period: 'EDUCATION',
     dot: SKY,
     body: 'Foundations in algorithms, systems and software design — the training ground before the field missions.',
-    bg: PAPER,
-    titleColor: INK,
-    metaColor: '#0284C7',
-    bodyColor: MUTED,
   },
   {
     title: 'ENGINEERING CREED',
@@ -176,18 +195,15 @@ export const TIMELINE: TimelineEvent[] = [
     period: 'ALWAYS',
     dot: RED,
     body: 'Ship small, ship often. Readable code beats clever code. Measure before optimising. Never abandon a build half-finished — that is my ninja way.',
-    bg: INK,
-    titleColor: ORANGE,
-    metaColor: ORANGE,
-    bodyColor: '#B8B0A0',
+    inverted: true,
   },
 ];
 
 export const RANKS = [
-  { label: 'Rank: Jonin Engineer', bg: ORANGE, fg: INK },
-  { label: 'Village: Colombo, LK', bg: PAPER, fg: INK },
-  { label: 'Squad: Efito Solutions', bg: INK, fg: PAPER },
-  { label: 'Chakra: TypeScript', bg: RED, fg: PAPER },
+  { label: 'Jonin Engineer', bg: ORANGE, fg: FIXED_INK },
+  { label: 'Colombo, LK', bg: PAPER, fg: INK },
+  { label: 'Efito Solutions', bg: INK, fg: ON_INK },
+  { label: 'TypeScript', bg: RED, fg: FIXED_PAPER },
 ];
 
 export const LINKS = {

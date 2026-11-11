@@ -4,12 +4,23 @@ import { useEffect } from 'react';
 
 /**
  * Adds `.is-in` to every [data-reveal] element once it scrolls into view.
- * `data-delay="120"` (ms) staggers siblings.
- * Re-scans on DOM changes so filtered/late-mounted cards animate too.
+ * `data-delay="70"` (ms) staggers siblings — keep it short; long stagger makes
+ * the page feel like it is loading rather than settling.
+ *
+ * Re-scans on DOM changes so filtered and late-mounted cards animate too.
  */
 export function useReveal(active: boolean = true) {
   useEffect(() => {
     if (!active) return;
+
+    // Nothing should be hidden waiting for an observer that will never fire a
+    // visible change. Reveal everything at once and skip the machinery.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document
+        .querySelectorAll<HTMLElement>('[data-reveal]')
+        .forEach((el) => el.classList.add('is-in'));
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -21,13 +32,13 @@ export function useReveal(active: boolean = true) {
           observer.unobserve(el);
         });
       },
-      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
     );
 
     const scan = () => {
-      document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-in)').forEach((el) => {
-        observer.observe(el);
-      });
+      document
+        .querySelectorAll<HTMLElement>('[data-reveal]:not(.is-in)')
+        .forEach((el) => observer.observe(el));
     };
 
     scan();
