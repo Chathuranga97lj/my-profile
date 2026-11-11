@@ -1,214 +1,709 @@
+/* ============================================================================
+   TOKENS
+
+   Colour lives here and only here. `lib/data.ts` re-exports these as
+   `var(--token)` strings, so a component that writes `color: INK` is really
+   writing `color: var(--ink)`. That is what makes the dark theme possible:
+   the roles stay the same, the values swap.
+
+   Read the names as ROLES, not colours. `--ink` is "the structural line and
+   the inverted surface". In the dark theme it is bone, not black — an ink
+   panel becomes a bone panel on a dark page, which is exactly the inversion a
+   manga uses for a night scene.
+   ========================================================================== */
+
 :root {
-  --ink: #14110F;
-  --paper: #F7F2E5;
-  --paper-dark: #EDE6D6;
-  --orange: #F97316;
-  --orange-deep: #E8590C;
-  --red: #B91C1C;
-  --sky: #38BDF8;
-  --muted: #4A443C;
+  /* structure */
+  --ground: #e9e1cf; /* page, behind the panels */
+  --paper: #f6f1e4; /* panel surface */
+  --ink: #141110; /* line work + inverted surface */
+  --chip: #e5ddca; /* tag / pill fill on paper */
+
+  /* text on paper (a real ramp — three steps, not one grey) */
+  --ink-70: #4a443c; /* body copy */
+  --ink-45: #7c7466; /* meta, captions, years */
+
+  /* text on ink surfaces */
+  --on-ink: #f6f1e4;
+  --on-ink-70: #b3ab99;
+  --on-ink-45: #857d6d;
+
+  /* accent — two values on purpose.
+     `--accent` is a FILL and always carries --ink on top (9:1).
+     `--accent-ink` is the same hue pushed dark enough to be legible AS TEXT
+     on paper (4.6:1). The old build used the fill colour for links, which
+     never cleared 3:1. */
+  --accent: #f97316;
+  --accent-ink: #c2410c;
+  --accent-quiet: #fde3cc;
+
+  --red: #b91c1c;
+  --sky: #38bdf8;
+  --sky-ink: #0369a1;
+
+  /* terminal green — sits on an --ink surface, so it inverts with --on-ink */
+  --term: #7dd3a0;
+
+  /* Fixed pair: these never swap. Text that sits on a fill which keeps its
+     colour in both themes (red rank stamps, orange buttons, sky dots) needs a
+     partner that also keeps its colour, or the contrast flips with the theme. */
+  --fixed-ink: #141110;
+  --fixed-paper: #f6f1e4;
+
+  /* surface effects */
+  --halftone: #0000001a;
+  --shadow: var(--ink);
+  --glass: #f6f1e4d9;
+
+  /* motion — the built-in CSS easings are too weak to read as intentional */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-pop: cubic-bezier(0.34, 1.35, 0.5, 1); /* slight overshoot, no flail */
+
+  color-scheme: light;
 }
 
-* { box-sizing: border-box; }
+[data-theme='dark'] {
+  --ground: #100e0c;
+  --paper: #1b1815;
+  --ink: #ede6d6;
+  --chip: #2a2621;
 
-html { scroll-behavior: smooth; }
+  --ink-70: #b3ab99;
+  --ink-45: #857d6d;
+
+  --on-ink: #17140f;
+  --on-ink-70: #4a443c;
+  --on-ink-45: #6b6455;
+
+  --accent: #f97316;
+  --accent-ink: #fb923c;
+  --accent-quiet: #3a2412;
+
+  --red: #ef4444;
+  --sky: #38bdf8;
+  --sky-ink: #7dd3fc;
+  --term: #2f7d4f;
+
+  --halftone: #ffffff14;
+  --shadow: #000000;
+  --glass: #100e0cd9;
+
+  color-scheme: dark;
+}
+
+/* ============================================================================
+   BASE
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* the sticky chapter bar must not cover the heading it scrolled to */
+  scroll-padding-top: 84px;
+}
 
 body {
   margin: 0;
-  background: var(--paper-dark);
+  background: var(--ground);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 320ms var(--ease-out), color 320ms var(--ease-out);
 }
 
-a { color: var(--orange-deep); text-decoration: none; }
-a:hover { color: var(--ink); }
-::selection { background: var(--orange); color: var(--ink); }
-
-/* ---------- animations ---------- */
-@keyframes rasenganSpin { to { transform: rotate(360deg); } }
-@keyframes rasenganSpinRev { to { transform: rotate(-360deg); } }
-@keyframes corePulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 40px 10px rgba(56,189,248,.55); }
-  50% { transform: scale(1.09); box-shadow: 0 0 70px 22px rgba(56,189,248,.75); }
-}
-@keyframes ringOut {
-  0% { transform: scale(.4); opacity: .85; }
-  100% { transform: scale(2.4); opacity: 0; }
-}
-@keyframes splashOut {
-  0% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.12); }
-}
-@keyframes signPop {
-  0% { opacity: 0; transform: translateY(12px) scale(.85); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes streak {
-  0% { transform: translateX(-120%); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translateX(120%); opacity: 0; }
-}
-@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-@keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
-@keyframes swirl { to { transform: rotate(360deg); } }
-@keyframes sfxJitter {
-  0%, 100% { transform: rotate(-4deg) translate(0, 0); }
-  25% { transform: rotate(-2deg) translate(1px, -1px); }
-  75% { transform: rotate(-6deg) translate(-1px, 1px); }
+a {
+  color: var(--accent-ink);
+  text-decoration: none;
 }
 
-/* ---------- kage bunshin: panels pop in behind a puff of smoke ----------
-   Each panel snaps past its final size and settles back, while a cloud of
-   white puffs blooms over it and clears. Stagger comes from --d, set per
-   panel, and the smoke has to share that delay so puff and clone land
-   together. */
-@keyframes cloneIn {
-  0%   { opacity: 0; transform: scale(.5) rotate(-7deg); }
-  45%  { opacity: 1; transform: scale(1.08) rotate(2.5deg); }
-  70%  { transform: scale(.96) rotate(-1.5deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0deg); }
-}
-@keyframes cloneSmoke {
-  0%   { opacity: 1; transform: scale(.35); }
-  60%  { opacity: .55; }
-  100% { opacity: 0; transform: scale(1.75); }
+::selection {
+  background: var(--accent);
+  color: #141110;
 }
 
-/* held state while the splash is still on screen */
-.clone-wait { opacity: 0; }
-
-.clone {
-  position: relative;
-  animation: cloneIn .52s cubic-bezier(.2, 1.35, .35, 1) var(--d, 0ms) both;
-}
-.clone::after {
-  content: '';
-  position: absolute;
-  inset: -12px;
-  z-index: 5;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 20% 32%, rgba(255,255,255,.97) 0 21%, transparent 23%),
-    radial-gradient(circle at 63% 16%, rgba(255,255,255,.94) 0 24%, transparent 26%),
-    radial-gradient(circle at 85% 60%, rgba(255,255,255,.94) 0 22%, transparent 24%),
-    radial-gradient(circle at 36% 80%, rgba(255,255,255,.96) 0 23%, transparent 25%),
-    radial-gradient(circle at 72% 88%, rgba(255,255,255,.92) 0 19%, transparent 21%),
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,.9) 0 29%, transparent 31%);
-  animation: cloneSmoke .6s ease-out var(--d, 0ms) both;
+/* One focus ring for the whole site. Keyboard users got nothing before. */
+:focus-visible {
+  outline: 3px solid var(--accent-ink);
+  outline-offset: 3px;
+  border-radius: 1px;
 }
 
-/* ---------- scroll reveal ---------- */
-[data-reveal] {
-  opacity: 0;
-  transition: opacity .65s cubic-bezier(.2,.8,.2,1), transform .65s cubic-bezier(.2,.8,.2,1);
-  will-change: opacity, transform;
-}
-[data-reveal="up"]    { transform: translateY(40px); }
-[data-reveal="left"]  { transform: translateX(-40px); }
-[data-reveal="right"] { transform: translateX(40px); }
-[data-reveal="zoom"]  { transform: scale(.85); transition-timing-function: cubic-bezier(.2,1.2,.4,1); }
-[data-reveal="slam"]  { transform: scale(1.25); transition: opacity .5s ease-out, transform .5s cubic-bezier(.2,1.4,.4,1); }
-[data-reveal].is-in   { opacity: 1; transform: none; }
+/* ============================================================================
+   TYPE
 
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal] { opacity: 1; transform: none; transition: none; }
-  .clone { animation: none; }
-  .clone::after { display: none; }
-  html { scroll-behavior: auto; }
+   Tracking is size-specific — a single letter-spacing value is wrong at one
+   end of a clamp() range or the other. Large display text needs NEGATIVE
+   tracking (letters read too far apart as they grow); small caps labels need
+   positive. Everything is in `em` so it scales with the clamp.
+   ========================================================================== */
+
+.t-display {
+  font-family: var(--font-anton), sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 0.94;
+  letter-spacing: -0.025em;
 }
 
-/* ---------- manga interactions ---------- */
-.manga-page {
-  border: 5px solid var(--ink);
+.t-section {
+  font-family: var(--font-anton), sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(28px, 5.6vw, 40px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* Bangers is a shout. It is now reserved for shouts: SFX, chapter marks and
+   rank stamps. Buttons, filters and nav went back to the body face, where
+   they are far easier to read and stop competing with the real headings. */
+.t-sfx {
+  font-family: var(--font-bangers), cursive;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.t-kanji {
+  font-family: var(--font-antique), serif;
+  line-height: 1;
+}
+
+.t-label {
+  font-weight: 800;
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.t-mono {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+
+.t-body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-70);
+  letter-spacing: 0;
+}
+
+/* ============================================================================
+   PANEL WEIGHT SCALE
+
+   The single biggest problem with the old build: every box had a 4–5px border
+   AND a hard drop shadow, so nothing was louder than anything else and the eye
+   had nowhere to land. A real manga page is one splash panel plus quiet
+   supporting panels. Four weights, and only ONE weight-1 panel per screen.
+   ========================================================================== */
+
+/* weight 1 — the splash panel. There is exactly one, in the hero. */
+.panel-hero {
+  border: 4px solid var(--ink);
   background: var(--paper);
-  box-shadow: 14px 14px 0 var(--ink);
+  box-shadow: 10px 10px 0 var(--shadow);
 }
+
+/* weight 2 — section containers. Border only. They frame; they don't shout. */
+.panel {
+  border: 3px solid var(--ink);
+  background: var(--paper);
+}
+
+/* weight 3 — cards. Thin frame, small shadow, lifts on hover. */
+.card {
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 4px 4px 0 var(--shadow);
+  transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+}
+
+/* weight 4 — chips and tags. No shadow at all. */
+.chip {
+  border: 2px solid var(--ink);
+  background: var(--chip);
+  color: var(--ink);
+}
+
 .halftone {
-  background-color: var(--paper-dark);
-  background-image: radial-gradient(#00000018 1px, transparent 1px);
+  background-color: var(--ground);
+  background-image: radial-gradient(var(--halftone) 1px, transparent 1px);
   background-size: 5px 5px;
 }
-.btn-manga { transition: transform .12s, box-shadow .12s; }
-.btn-manga:hover { transform: translate(3px, 3px); }
-.btn-manga.shadow-ink { box-shadow: 6px 6px 0 var(--ink); }
-.btn-manga.shadow-ink:hover { box-shadow: 3px 3px 0 var(--ink); }
-.btn-manga.shadow-paper { box-shadow: 6px 6px 0 var(--paper); }
-.btn-manga.shadow-paper:hover { box-shadow: 3px 3px 0 var(--paper); }
-.btn-manga.shadow-orange { box-shadow: 6px 6px 0 var(--orange); }
-.btn-manga.shadow-orange:hover { box-shadow: 3px 3px 0 var(--orange); }
-.btn-manga.shadow-sky { box-shadow: 6px 6px 0 var(--sky); }
-.btn-manga.shadow-sky:hover { box-shadow: 3px 3px 0 var(--sky); }
 
-.card-manga {
-  box-shadow: 8px 8px 0 var(--ink);
-  transition: transform .2s, box-shadow .2s;
-}
-.card-manga:hover {
-  transform: translate(-4px, -4px);
-  box-shadow: 14px 14px 0 var(--ink);
+/* ============================================================================
+   INTERACTION
+
+   Every pressable thing answers the press within 120ms. Hover effects are
+   gated behind a real pointer — on a touch screen `:hover` fires on tap and
+   leaves elements stuck in their hover state.
+   ========================================================================== */
+
+.pressable {
+  transition: transform 120ms var(--ease-out), box-shadow 180ms var(--ease-out),
+    background-color 180ms var(--ease-out), color 180ms var(--ease-out);
 }
 
-.nav-link { color: var(--paper); transition: color .15s; }
-.nav-link:hover { color: var(--orange); }
+.pressable:active {
+  transform: scale(0.97);
+}
 
-.footer-link { color: var(--ink); transition: color .15s; }
-.footer-link:hover { color: var(--orange-deep); }
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 8px 8px 0 var(--shadow);
+  }
 
-/* ---------- responsive layout ----------
-   Type and spacing scale fluidly via clamp() in the components. Anything a
-   single value can't express — collapsing a grid, restacking a flex row —
-   lives here so the media queries have somewhere to land. Base values are
-   declared in these classes rather than inline, since inline styles would
-   otherwise outrank the breakpoints. */
+  .btn:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--shadow);
+  }
 
-.shell { padding: 0 clamp(12px, 3vw, 28px) clamp(12px, 3vw, 28px); }
+  .nav-link:hover {
+    color: var(--accent);
+  }
 
-/* hero: two panels side by side, stacked once they'd get too narrow */
-.hero-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+  .link:hover {
+    color: var(--ink);
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 3px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--shadow);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 13px 22px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #141110;
+}
+
+.btn-secondary {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* On an ink surface the shadow has to be light or it vanishes. */
+.on-ink .btn {
+  border-color: var(--on-ink);
+  box-shadow: 5px 5px 0 var(--on-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .on-ink .btn:hover {
+    box-shadow: 2px 2px 0 var(--on-ink);
+  }
+}
+
+.nav-link {
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 160ms var(--ease-out);
+  position: relative;
+}
+
+/* underline grows from the left rather than fading in — it points the way it
+   is travelling, which reads as intent rather than decoration */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-link:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+.link {
+  color: var(--accent-ink);
+  font-weight: 700;
+  transition: color 160ms var(--ease-out);
+}
+
+/* ============================================================================
+   STICKY CHAPTER BAR
+
+   A translucent layer the content scrolls under, rather than an opaque strip
+   that eats a fixed band of the viewport.
+   ========================================================================== */
 
 .chapter-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 14px;
+  padding: 10px clamp(14px, 3vw, 26px);
+  background: var(--glass);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-bottom: 2px solid var(--ink);
 }
-.chapter-nav { display: flex; flex-wrap: wrap; gap: 26px; }
+
+.chapter-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(16px, 3vw, 28px);
+}
+
+/* ---- theme toggle ----
+   Both glyphs ship in the HTML; CSS picks the one for the *target* theme, so
+   the icon is right in the first painted frame with no JS involved. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-family: var(--font-antique), serif;
+  font-size: 16px;
+  line-height: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .theme-toggle:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+}
+
+.to-day {
+  display: none;
+}
+
+[data-theme='dark'] .to-night {
+  display: none;
+}
+
+[data-theme='dark'] .to-day {
+  display: inline;
+}
+
+/* Set by the blocking script when the splash has already played this session
+   (or the visitor asked for reduced motion). Hiding it in CSS rather than in
+   React means it never paints, even for the frame before hydration. */
+[data-splash='skip'] #splash {
+  display: none;
+}
+
+/* ============================================================================
+   ENTRANCE — kage bunshin
+
+   Still a clone poof, but a restrained one. The old keyframe started at
+   scale(.5) rotate(-7deg) over 520ms with a 90ms stagger: six panels meant
+   the last one landed nearly a second after the first, and starting that
+   small reads as "appeared from nowhere". Now: scale(.94), 2deg, 340ms,
+   55ms apart — the whole hero settles in under half a second.
+   ========================================================================== */
+
+@keyframes cloneIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) rotate(-1.5deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.012) rotate(0.4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes cloneSmoke {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+/* held state while the splash is still on screen — otherwise the hero is
+   visible through the splash's fade and then animates a second time */
+.clone-wait {
+  opacity: 0;
+}
+
+.clone {
+  position: relative;
+  animation: cloneIn 340ms var(--ease-pop) var(--d, 0ms) both;
+}
+
+.clone::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 22% 30%, var(--paper) 0 20%, transparent 22%),
+    radial-gradient(circle at 64% 16%, var(--paper) 0 23%, transparent 25%),
+    radial-gradient(circle at 84% 62%, var(--paper) 0 21%, transparent 23%),
+    radial-gradient(circle at 34% 82%, var(--paper) 0 22%, transparent 24%),
+    radial-gradient(circle at 72% 88%, var(--paper) 0 18%, transparent 20%),
+    radial-gradient(circle at 50% 50%, var(--paper) 0 28%, transparent 30%);
+  animation: cloneSmoke 420ms var(--ease-out) var(--d, 0ms) both;
+}
+
+/* ============================================================================
+   SCROLL REVEAL
+
+   40px of travel over 650ms was far enough and slow enough to feel like the
+   page was dragging behind the scroll. 14px over 420ms reads as "settling"
+   without ever making the reader wait.
+   ========================================================================== */
+
+[data-reveal] {
+  opacity: 0;
+  transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out);
+}
+
+[data-reveal='up'] {
+  transform: translateY(14px);
+}
+[data-reveal='left'] {
+  transform: translateX(-16px);
+}
+[data-reveal='right'] {
+  transform: translateX(16px);
+}
+[data-reveal='pop'] {
+  transform: scale(0.97);
+  transition-timing-function: var(--ease-pop);
+}
+
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================================
+   SPLASH
+   ========================================================================== */
+
+@keyframes splashOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sealSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sealIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes signPop {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+
+   Not "no feedback" — gentler feedback. Opacity and colour survive because
+   they carry meaning; travel, rotation and looping motion do not.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .clone {
+    animation: none;
+  }
+
+  .clone::after {
+    display: none;
+  }
+
+  .card:hover,
+  .btn:hover,
+  .pressable:active {
+    transform: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 160ms !important;
+  }
+}
+
+/* Frostier means less legible, not more, for anyone who asked for less
+   transparency — go solid instead. */
+@media (prefers-reduced-transparency: reduce) {
+  .chapter-bar {
+    background: var(--paper);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ============================================================================
+   LAYOUT
+
+   Fluid type and spacing use clamp() inline in the components. Anything a
+   single value cannot express — collapsing a grid, restacking a row — lives
+   here, because an inline style outranks a media query and the breakpoint
+   would silently do nothing.
+   ========================================================================== */
+
+.shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(14px, 3vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(48px, 8vw, 96px);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(14px, 2vw, 18px);
+}
+
+/* min() is what stops the track overflowing a viewport narrower than the
+   floor — plain minmax(320px, 1fr) was the original mobile bug */
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: clamp(14px, 2.4vw, 20px);
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: clamp(20px, 4vw, 30px);
+}
 
 .rank-strip {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: 16px;
 }
 
-.filter-bar { display: flex; flex-wrap: wrap; border: 3px solid var(--ink); }
-
-@media (max-width: 980px) {
-  .hero-grid { grid-template-columns: minmax(0, 1fr); }
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  border: 2px solid var(--ink);
 }
 
-@media (max-width: 700px) {
-  .chapter-bar { gap: 10px; }
-  .chapter-nav { gap: 14px; }
-  .rank-strip { gap: 12px; }
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
-/* The tilt/lift hovers are meaningless on touch and only cause jitter. This
-   block sits above the 560px one deliberately: the two :hover rules have equal
-   specificity, so source order is what lets the narrow-screen shadow win on a
-   small touch device. */
-@media (hover: none) {
-  .btn-manga:hover { transform: none; }
-  .card-manga:hover { transform: none; box-shadow: 8px 8px 0 var(--ink); }
-}
+@media (max-width: 620px) {
+  .chapter-nav {
+    gap: 14px;
+  }
 
-@media (max-width: 560px) {
-  /* thinner frames and shorter drop shadows so the panels don't eat the screen */
-  .manga-page { border-width: 4px; box-shadow: 8px 8px 0 var(--ink); }
-  .card-manga { box-shadow: 6px 6px 0 var(--ink); }
-  .card-manga:hover { transform: none; box-shadow: 6px 6px 0 var(--ink); }
-  .filter-bar { width: 100%; }
-  .filter-bar > button { flex: 1 1 auto; }
+  .panel-hero {
+    border-width: 3px;
+    box-shadow: 6px 6px 0 var(--shadow);
+  }
+
+  .filter-bar {
+    width: 100%;
+  }
+
+  .filter-bar > button {
+    flex: 1 1 auto;
+  }
 }
